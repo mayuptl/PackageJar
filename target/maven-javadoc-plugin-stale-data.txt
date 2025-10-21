@@ -1,0 +1,65 @@
+@options
+@packages
+-classpath
+'C:/Users/Teast/.m2/repository/org/apache/poi/poi/4.1.2/poi-4.1.2.jar;C:/Users/Teast/.m2/repository/commons-codec/commons-codec/1.13/commons-codec-1.13.jar;C:/Users/Teast/.m2/repository/org/apache/commons/commons-collections4/4.4/commons-collections4-4.4.jar;C:/Users/Teast/.m2/repository/org/apache/commons/commons-math3/3.6.1/commons-math3-3.6.1.jar;C:/Users/Teast/.m2/repository/com/zaxxer/SparseBitSet/1.2/SparseBitSet-1.2.jar;C:/Users/Teast/.m2/repository/org/apache/poi/poi-ooxml/4.1.2/poi-ooxml-4.1.2.jar;C:/Users/Teast/.m2/repository/org/apache/poi/poi-ooxml-schemas/4.1.2/poi-ooxml-schemas-4.1.2.jar;C:/Users/Teast/.m2/repository/org/apache/xmlbeans/xmlbeans/3.1.0/xmlbeans-3.1.0.jar;C:/Users/Teast/.m2/repository/org/apache/commons/commons-compress/1.19/commons-compress-1.19.jar;C:/Users/Teast/.m2/repository/com/github/virtuald/curvesapi/1.06/curvesapi-1.06.jar;C:/Users/Teast/.m2/repository/com/github/stephenc/monte/monte-screen-recorder/0.7.7.0/monte-screen-recorder-0.7.7.0.jar;C:/Users/Teast/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.20.0/jackson-databind-2.20.0.jar;C:/Users/Teast/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.20/jackson-annotations-2.20.jar;C:/Users/Teast/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.20.0/jackson-core-2.20.0.jar;C:/Users/Teast/.m2/repository/commons-io/commons-io/2.20.0/commons-io-2.20.0.jar'
+-encoding
+'UTF-8'
+-protected
+-sourcepath
+'D:/Work/Automation/app-utils/app-utils/src/main/java;D:/Work/Automation/app-utils/app-utils/target/generated-sources/annotations'
+-author
+-bottom
+'Copyright &#169; 2025. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'D:/Work/Automation/app-utils/app-utils/target/apidocs'
+-docencoding
+'UTF-8'
+-docfilessubdirs
+-doctitle
+'app-utils 2.0-SNAPSHOT API'
+-use
+-version
+-windowtitle
+'app-utils 2.0-SNAPSHOT API'
+excel
+json
+video
+C:\Users\Teast\.m2\repository\org\apache\poi\poi\4.1.2\poi-4.1.2.jar = 1760884926503
+C:\Users\Teast\.m2\repository\commons-codec\commons-codec\1.13\commons-codec-1.13.jar = 1711920402475
+C:\Users\Teast\.m2\repository\org\apache\commons\commons-collections4\4.4\commons-collections4-4.4.jar = 1760876563350
+C:\Users\Teast\.m2\repository\org\apache\commons\commons-math3\3.6.1\commons-math3-3.6.1.jar = 1711920403746
+C:\Users\Teast\.m2\repository\com\zaxxer\SparseBitSet\1.2\SparseBitSet-1.2.jar = 1735415354162
+C:\Users\Teast\.m2\repository\org\apache\poi\poi-ooxml\4.1.2\poi-ooxml-4.1.2.jar = 1760884945003
+C:\Users\Teast\.m2\repository\org\apache\poi\poi-ooxml-schemas\4.1.2\poi-ooxml-schemas-4.1.2.jar = 1760884946212
+C:\Users\Teast\.m2\repository\org\apache\xmlbeans\xmlbeans\3.1.0\xmlbeans-3.1.0.jar = 1711920404386
+C:\Users\Teast\.m2\repository\org\apache\commons\commons-compress\1.19\commons-compress-1.19.jar = 1760884944609
+C:\Users\Teast\.m2\repository\com\github\virtuald\curvesapi\1.06\curvesapi-1.06.jar = 1711920402807
+C:\Users\Teast\.m2\repository\com\github\stephenc\monte\monte-screen-recorder\0.7.7.0\monte-screen-recorder-0.7.7.0.jar = 1760897105634
+C:\Users\Teast\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.20.0\jackson-databind-2.20.0.jar = 1757255740180
+C:\Users\Teast\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.20\jackson-annotations-2.20.jar = 1757255740273
+C:\Users\Teast\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.20.0\jackson-core-2.20.0.jar = 1757255740559
+C:\Users\Teast\.m2\repository\commons-io\commons-io\2.20.0\commons-io-2.20.0.jar = 1760280529851
+D:\Work\Automation\app-utils\app-utils\src\main\java = 1760984185737
+D:\Work\Automation\app-utils\app-utils\target\generated-sources\annotations = 1761042403581
+D:\Work\Automation\app-utils\app-utils\target\apidocs\allclasses-index.html = 1761042428230
+D:\Work\Automation\app-utils\app-utils\target\apidocs\allpackages-index.html = 1761042428235
+D:\Work\Automation\app-utils\app-utils\target\apidocs\copy.svg = 1761042428360
+D:\Work\Automation\app-utils\app-utils\target\apidocs\element-list = 1761042427862
+D:\Work\Automation\app-utils\app-utils\target\apidocs\help-doc.html = 1761042428324
+D:\Work\Automation\app-utils\app-utils\target\apidocs\index-all.html = 1761042428301
+D:\Work\Automation\app-utils\app-utils\target\apidocs\index.html = 1761042428167
+D:\Work\Automation\app-utils\app-utils\target\apidocs\link.svg = 1761042428368
+D:\Work\Automation\app-utils\app-utils\target\apidocs\member-search-index.js = 1761042428277
+D:\Work\Automation\app-utils\app-utils\target\apidocs\module-search-index.js = 1761042428240
+D:\Work\Automation\app-utils\app-utils\target\apidocs\overview-summary.html = 1761042428308
+D:\Work\Automation\app-utils\app-utils\target\apidocs\overview-tree.html = 1761042428143
+D:\Work\Automation\app-utils\app-utils\target\apidocs\package-search-index.js = 1761042428257
+D:\Work\Automation\app-utils\app-utils\target\apidocs\script.js = 1761042428356
+D:\Work\Automation\app-utils\app-utils\target\apidocs\search-page.js = 1761042428391
+D:\Work\Automation\app-utils\app-utils\target\apidocs\search.html = 1761042428305
+D:\Work\Automation\app-utils\app-utils\target\apidocs\search.js = 1761042428379
+D:\Work\Automation\app-utils\app-utils\target\apidocs\stylesheet.css = 1761042428349
+D:\Work\Automation\app-utils\app-utils\target\apidocs\tag-search-index.js = 1761042428279
+D:\Work\Automation\app-utils\app-utils\target\apidocs\type-search-index.js = 1761042428264
