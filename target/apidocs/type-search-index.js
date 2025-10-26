@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"excel","l":"ExcelReader"},{"p":"json","l":"JsonReader"},{"p":"video","l":"TestRecorder"}];updateSearchResults();

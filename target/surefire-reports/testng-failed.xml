@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Test demo]" guice-stage="DEVELOPMENT" verbose="0">
+  <listeners>
+    <listener class-name="listeners.ClassReportListener"/>
+    <listener class-name="listeners.ExtentReportListeners"/>
+  </listeners>
+  <test thread-count="5" name="Test(failed)" verbose="0">
+    <classes>
+      <class name="Demo.TC02">
+        <methods>
+          <include name="init"/>
+          <include name="tear"/>
+          <include name="two2"/>
+        </methods>
+      </class> <!-- Demo.TC02 -->
+      <class name="Demo.TC01">
+        <methods>
+          <include name="two"/>
+          <include name="init"/>
+          <include name="tear"/>
+        </methods>
+      </class> <!-- Demo.TC01 -->
+    </classes>
+  </test> <!-- Test(failed) -->
+</suite> <!-- Failed suite [Test demo] -->
