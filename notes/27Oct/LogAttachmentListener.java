@@ -1,5 +1,6 @@
 package listeners;
 
+import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import managers.ExtentManager; // Your thread-safe manager for ExtentTest
 import common.log.LogExtractorUtils; // Your utility class
@@ -7,7 +8,7 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 public class LogAttachmentListener implements ITestListener {
-
+ //   private static ExtentReports extent = ExtentManager.getReportIntance();
     private void attachLogs(ITestResult result) {
         // 1. Get the thread-local ExtentTest instance
         ExtentTest test = ExtentManager.getTest();
