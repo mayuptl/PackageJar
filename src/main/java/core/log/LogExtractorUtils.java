@@ -1,4 +1,4 @@
-package common.log;
+package core.log;
 
 import java.io.IOException;
 import java.nio.file.Files;

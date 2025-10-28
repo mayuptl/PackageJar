@@ -2,7 +2,7 @@ package listeners;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
-import common.log.LogExtractorUtils;
+import core.log.LogExtractorUtils;
 import managers.DriverManager;
 import managers.ExtentManager;
 import org.openqa.selenium.WebDriver;

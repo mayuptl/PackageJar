@@ -1,4 +1,4 @@
-package common.highlight;
+package core.highlight;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;

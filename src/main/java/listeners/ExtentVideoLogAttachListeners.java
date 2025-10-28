@@ -3,7 +3,7 @@ package listeners;
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
-import common.log.LogExtractorUtils;
+import core.log.LogExtractorUtils;
 import managers.DriverManager;
 import managers.ExtentManager;
 import managers.RecorderManager;

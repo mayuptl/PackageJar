@@ -1,4 +1,5 @@
 package core.base;
+import core.config.ConfigReader;
 import managers.DriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -12,22 +13,61 @@ import org.openqa.selenium.safari.SafariOptions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import java.io.IOException;
 import java.time.Duration;
 
 
 public class AppUtilTestBase {
 
     public WebDriver driver;
+    private static final String DEFAULT_BROWSER = "chrome";
+    private static final String DEFAULT_URL = "https://www.amazon.co.uk/"; // Replace with your default URL
+    private static final int DEFAULT_IMPLICIT_WAIT = 10;
 
+    /**
+     * Public method 1: <b>Launches the application using default browser:chrome, URL:amazon, and wait time:10 sec</b>.
+     */
     @BeforeClass(alwaysRun = true)
     public void launchApplication() {
-        String browserName = "chrome";
-        String Url = "https://www.amazon.co.uk/";
-        WebDriver driverInstance = initializeDriver(browserName);
-        DriverManager.setDriver(driverInstance);
-        driverInstance.get(Url);
+        // Calls the core logic with predefined constants
+        launchApplicationCore(DEFAULT_BROWSER, DEFAULT_URL, DEFAULT_IMPLICIT_WAIT);
     }
-    private WebDriver initializeDriver(String BrowserName) {
+
+    /**
+     * Public method 2: <b>Launches the application using user-provided values.</b>
+     * @param browserName The name of the browser (e.g., "chrome", "firefox","edge").
+     * @param appUrl The URL of the application.
+     * @param implicitlyWaitInSec The implicit wait timeout in seconds.
+     */
+    //@BeforeClass(alwaysRun = true)
+    public void launchApplication(String browserName, String appUrl, Integer implicitlyWaitInSec) {
+        // Calls the core logic with user-provided arguments
+        launchApplicationCore(browserName, appUrl, implicitlyWaitInSec);
+    }
+
+    /**
+     * Private core method: Contains the actual implementation logic.
+     * @param browserName The browser name.
+     * @param appUrl The application URL.
+     * @param implicitlyWaitInSec The implicit wait timeout.
+     */
+    private void launchApplicationCore(String browserName, String appUrl, Integer implicitlyWaitInSec) {
+        // Assume these methods are defined elsewhere
+        WebDriver driverInstance = initializeDriver(browserName, implicitlyWaitInSec);
+        DriverManager.setDriver(driverInstance);
+        driverInstance.get(appUrl);
+    }
+
+    public void launchApp() throws IOException {
+        // Assume these methods are defined elsewhere
+        WebDriver driverInstance = initializeDriver(ConfigReader.getStrProp("browserName"),ConfigReader.getIntProp("implicitlyWaitInSec"));
+        DriverManager.setDriver(driverInstance);
+        driverInstance.get(ConfigReader.getStrProp("appUrl"));
+    }
+    private WebDriver initializeDriver(String BrowserName,Integer implicitlyWaitInSec) {
+        int finalWaitTime = (implicitlyWaitInSec == null)
+                ? DEFAULT_IMPLICIT_WAIT         // If true (it is null), assign the default
+                : implicitlyWaitInSec;
         if (BrowserName.contains("edge")) {
             EdgeOptions options = new EdgeOptions();
             if (BrowserName.contains("headless")) {
@@ -54,7 +94,7 @@ public class AppUtilTestBase {
                     ". Supported browsers are: edge, chrome, firefox, safari, edge headless, chrome headless, firefox headless");
         }
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitlyWaitInSec));
         return driver;
     }
     @AfterClass(alwaysRun = true)
