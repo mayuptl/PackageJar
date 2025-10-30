@@ -11,14 +11,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
+import static core.config.ConfigReader.getStrProp;
 import static org.monte.media.FormatKeys.*;
 import static org.monte.media.VideoFormatKeys.*;
 
 public class TestRecorder extends ScreenRecorder {
     private final String name;
-    // Default video folder (kept for the factory method)
-    private static final String DEFAULT_VIDEO_FOLDER = "./test-recordings/";
-
     // Constructor remains mostly the same
     public TestRecorder(GraphicsConfiguration cfg, Rectangle captureArea, Format fileFormat,
                         Format screenFormat, Format mouseFormat, Format audioFormat, File movieFolder, String name)

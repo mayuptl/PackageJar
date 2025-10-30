@@ -4,8 +4,10 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import static core.config.ConfigReader.getStrProp;
+
 public class GetVideoFilePath {
-    private static final String DEFAULT_VIDEO_FOLDER = "target/test-recordings/";
+    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
     public static String toGetVideoFilePath(String testCaseName)
     {
         // Calls the primary implementation with the default extension

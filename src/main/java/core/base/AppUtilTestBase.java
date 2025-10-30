@@ -16,13 +16,16 @@ import org.testng.annotations.BeforeClass;
 import java.io.IOException;
 import java.time.Duration;
 
+import static core.config.ConfigReader.getIntProp;
+import static core.config.ConfigReader.getStrProp;
+
 
 public class AppUtilTestBase {
 
     public WebDriver driver;
-    private static final String DEFAULT_BROWSER = "chrome";
-    private static final String DEFAULT_URL = "https://www.amazon.co.uk/"; // Replace with your default URL
-    private static final int DEFAULT_IMPLICIT_WAIT = 10;
+    private static final String DEFAULT_BROWSER = getStrProp("DEFAULT_BROWSER");
+    private static final String DEFAULT_URL = getStrProp("DEFAULT_URL"); // Replace with your default URL
+    private static final int DEFAULT_IMPLICIT_WAIT = getIntProp("DEFAULT_IMPLICIT_WAIT");
 
     /**
      * Public method 1: <b>Launches the application using default browser:chrome, URL:amazon, and wait time:10 sec</b>.
@@ -60,9 +63,9 @@ public class AppUtilTestBase {
 
     public void launchApp() throws IOException {
         // Assume these methods are defined elsewhere
-        WebDriver driverInstance = initializeDriver(ConfigReader.getStrProp("browserName"),ConfigReader.getIntProp("implicitlyWaitInSec"));
+        WebDriver driverInstance = initializeDriver(getStrProp("browserName"),ConfigReader.getIntProp("implicitlyWaitInSec"));
         DriverManager.setDriver(driverInstance);
-        driverInstance.get(ConfigReader.getStrProp("appUrl"));
+        driverInstance.get(getStrProp("appUrl"));
     }
     private WebDriver initializeDriver(String BrowserName,Integer implicitlyWaitInSec) {
         int finalWaitTime = (implicitlyWaitInSec == null)
@@ -94,7 +97,7 @@ public class AppUtilTestBase {
                     ". Supported browsers are: edge, chrome, firefox, safari, edge headless, chrome headless, firefox headless");
         }
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitlyWaitInSec));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(finalWaitTime));
         return driver;
     }
     @AfterClass(alwaysRun = true)

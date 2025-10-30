@@ -42,7 +42,7 @@ public class ExtentLogAttachListeners implements ITestListener {
     @Override
     public void onTestSuccess(ITestResult result) {
         ExtentTest test = methodLevelTest.get();
-        test.pass("Test Passed");
+       // test.pass("Test Passed");
         WebDriver driver = DriverManager.getDriver();
         if (driver != null) {
             String base64Screenshot = getBase64Screenshot(driver);

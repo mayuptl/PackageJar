@@ -4,9 +4,12 @@ import core.video.TestRecorder;
 import java.awt.*;
 import java.io.IOException;
 
+import static core.config.ConfigReader.getStrProp;
+
 public class RecorderManager {
     private static final ThreadLocal<TestRecorder> recorderThread = new ThreadLocal<>();
-    private static final String DEFAULT_VIDEO_FOLDER = "target/test-recordings/";
+    // Default video folder (kept for the factory method)
+    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
     /**
      * Initializes the thread-local recorder with a custom name and path.
      */
@@ -18,7 +21,7 @@ public class RecorderManager {
         }
     }
     /**
-     * Initializes the thread-local recorder using the default path.
+     * Initializes the thread-local recorder using the default path: ${user.dir}/execution-output//test-recordings/
      * Uses Method Overloading for convenience.
      */
     public static synchronized void initializeRecorder(String recordedVideoName) throws IOException, AWTException {

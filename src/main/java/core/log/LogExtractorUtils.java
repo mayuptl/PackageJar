@@ -7,11 +7,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import static core.config.ConfigReader.getStrProp;
+
 public class LogExtractorUtils {
 
-    private static final String DEFAULT_LOG_PATH = "executionLogs/Logs.log";
+    private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH");
 
-    /** <b>Overload 1: Extracts logs using TestCaseName as the unique filter and the default path: executionLogs/Logs.log <b/>
+    /** <b>Overload 1: Extracts logs using TestCaseName as the unique filter and the default path: ${user.dir}/execution-output/test-logs/Logs.log <b/>
      * @param uniqueLogFilter The test method name (e.g., "ToCheckLogin").
      * @return The extracted logs as a single String.
      */

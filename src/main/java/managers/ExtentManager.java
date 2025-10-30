@@ -5,13 +5,15 @@ import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
 
+import static core.config.ConfigReader.getStrProp;
+
 // Removed all imports related to Map and ConcurrentHashMap
 
 public class ExtentManager {
     private static ExtentReports extent;
-    private static final String DEFAULT_REPORT_PATH = "test-output/ExtentReport.html";
+    private static final String DEFAULT_REPORT_PATH = getStrProp("DEFAULT_EXTENT_REPORT_PATH");
     /**
-     * <b>Initializes ExtentReports using a custom or default path: test-output/ExtentReport.html</b>
+     * <b>Initializes ExtentReports using a custom path</b>
      */
     public static ExtentReports getReportIntance(String reportFilePath) {
         if (extent == null) {
@@ -29,7 +31,7 @@ public class ExtentManager {
     }
 
     /**
-     * <b>Initializes ExtentReports using the default path: test-output/ExtentReport.html</b>
+     * <b>Initializes ExtentReports using the default path: execution-output/reports/ExtentReport.html</b>
      */
     public static ExtentReports getReportIntance() {
         return getReportIntance(DEFAULT_REPORT_PATH);

@@ -7,44 +7,57 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigReader {
-
     private static final String RESOURCE_PATH = "config.properties";
-
     /**
-     * Helper method to load properties from the classpath.
-     * This method is called repeatedly for every property access.
+     * Loads the properties file from the classpath.
      */
     private static Properties loadPropertiesAlways() throws IOException {
         Properties props = new Properties();
 
-        // Use the ClassLoader to find the file within the consumer's compiled project resources.
         try (InputStream is = ConfigReader.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
-
             if (is == null) {
-                throw new FileNotFoundException("Resource not found on classpath: " + RESOURCE_PATH +
-                        " (Ensure file is in src/main/resources or src/test/resources)");
+                throw new IOException("❌ Resource not found: " + RESOURCE_PATH +
+                        " (Ensure it's in src/main/resources or src/test/resources)");
             }
             props.load(is);
         }
         return props;
     }
+    /**
+     * Get a String property value safely.
+     */
+    public static String getStrProp(String key) {
+        try {
+            Properties prop = loadPropertiesAlways();
+            String value = prop.getProperty(key);
 
-    // --- Public Getter Methods (Read on Every Call) ---
-    public static String getStrProp(String key) throws IOException {
-        Properties prop = loadPropertiesAlways(); // Always re-reads the file
-        return prop.getProperty(key);
+            if (value == null || value.trim().isEmpty()) {
+                throw new RuntimeException("❌ Missing or empty property for key: " + key);
+            }
+            return value.trim();
+
+        } catch (IOException e) {
+            throw new RuntimeException("❌ Failed to load config.properties", e);
+        }
     }
-
-    public static int getIntProp(String key) throws IOException, NumberFormatException {
+    /**
+     * Get an integer property value safely.
+     */
+    public static int getIntProp(String key) {
         String value = getStrProp(key);
-        return Integer.parseInt(value.trim());
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("❌ Invalid integer value for key: " + key + " -> " + value);
+        }
     }
-
-    public static boolean getBoolProp(String key) throws IOException {
+    /**
+     * Get a boolean property value safely.
+     */
+    public static boolean getBoolProp(String key) {
         String value = getStrProp(key);
         return Boolean.parseBoolean(value.trim());
     }
-
 
     /**
      * Helper to read properties from a project-level directory (File System).
@@ -55,25 +68,53 @@ public class ConfigReader {
     private static Properties loadFromFileSystem(String filePath) throws IOException {
         Properties props = new Properties();
 
-        // Using FileInputStream to read directly from the file system path
         try (FileInputStream fis = new FileInputStream(filePath)) {
             props.load(fis);
+        } catch (FileNotFoundException e) {
+            throw new IOException("❌ Config file not found: " + filePath +
+                    "\n➡ Ensure the path is correct and the file exists.", e);
+        } catch (IOException e) {
+            throw new IOException("❌ Failed to load config file: " + filePath, e);
         }
+
         return props;
     }
+    /**
+     * Reads a String property safely from a given file path.
+     */
+    public static String getStrPropFromPath(String key, String filePath) {
+        try {
+            Properties prop = loadFromFileSystem(filePath);
+            String value = prop.getProperty(key);
 
-    public static String getStrPropFromPath(String key, String filePath) throws IOException {
-        Properties prop = loadFromFileSystem(filePath);
-        return prop.getProperty(key);
+            if (value == null || value.trim().isEmpty()) {
+                throw new RuntimeException("❌ Missing or empty property for key: " + key +
+                        " in file: " + filePath);
+            }
+
+            return value.trim();
+
+        } catch (IOException e) {
+            throw new RuntimeException("❌ Unable to read property file: " + filePath, e);
+        }
     }
-
-    public static int getIntPropFromPath(String key, String filePath) throws IOException {
-        String value = getStrPropFromPath(key,filePath);
-        return Integer.parseInt(value.trim());
+    /**
+     * Reads an integer property from a given file path.
+     */
+    public static int getIntPropFromPath(String key, String filePath) {
+        String value = getStrPropFromPath(key, filePath);
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("❌ Invalid integer value for key: " + key +
+                    " in file: " + filePath + " -> " + value);
+        }
     }
-
-    public static boolean getBoolPropFromPath(String key, String filePath) throws IOException {
-        String value = getStrPropFromPath(key,filePath);
+    /**
+     * Reads a boolean property from a given file path.
+     */
+    public static boolean getBoolPropFromPath(String key, String filePath) {
+        String value = getStrPropFromPath(key, filePath);
         return Boolean.parseBoolean(value.trim());
     }
 }
