@@ -5,7 +5,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.2.2-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
@@ -217,6 +217,14 @@
                                 <relocation>
                                     <pattern>org.apache.logging.log4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.log4j-api</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.hc.client5</pattern>
+                                    <shadedPattern>org.example.apputils.shaded.httpclient5</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.hc.core5</pattern>
+                                    <shadedPattern>org.example.apputils.shaded.httpcore5</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
