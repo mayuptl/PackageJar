@@ -3,7 +3,7 @@ package listeners;
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
-import core.log.LogExtractorUtils;
+import core.logging.LogExtractorUtil;
 import managers.DriverManager;
 import managers.ExtentManager;
 import managers.RecorderManager;
@@ -112,13 +112,7 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
     }
     private void attachLogs(ExtentTest test,String driverID,String methodName)
     {
-        String testLogs;
-        if(getBoolProp("LOG_BY_ID"))
-        {
-            testLogs = LogExtractorUtils.toGetTestCaseLogs(driverID);
-        }else {
-            testLogs = LogExtractorUtils.toGetTestCaseLogs(methodName);
-        }
+        String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
         String styledLogs=
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
                         + testLogs + "</pre></div>";

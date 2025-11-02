@@ -2,20 +2,20 @@
 <testng-results ignored="0" total="2" passed="2" failed="0" skipped="0">
   <reporter-output>
   </reporter-output>
-  <suite started-at="2025-11-02T18:37:05 IST" name="Test demo" finished-at="2025-11-02T18:37:06 IST" duration-ms="1299">
+  <suite started-at="2025-11-03T01:36:06 IST" name="Test demo" finished-at="2025-11-03T01:36:06 IST" duration-ms="595">
     <groups>
     </groups>
-    <test started-at="2025-11-02T18:37:05 IST" name="Test" finished-at="2025-11-02T18:37:06 IST" duration-ms="1299">
-      <class name="Demo.TC01">
-        <test-method signature="one()[pri:0, instance:Demo.TC01@4f32a3ad]" started-at="2025-11-02T18:37:05 IST" name="one" finished-at="2025-11-02T18:37:06 IST" duration-ms="938" status="PASS">
+    <test started-at="2025-11-03T01:36:06 IST" name="Test" finished-at="2025-11-03T01:36:06 IST" duration-ms="595">
+      <class name="Demo.TC02">
+        <test-method signature="EmpLoginCheck()[pri:1, instance:Demo.TC02@6f53b8a]" started-at="2025-11-03T01:36:06 IST" name="EmpLoginCheck" finished-at="2025-11-03T01:36:06 IST" duration-ms="529" status="PASS">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- one -->
-        <test-method signature="two()[pri:0, instance:Demo.TC01@4f32a3ad]" started-at="2025-11-02T18:37:06 IST" name="two" finished-at="2025-11-02T18:37:06 IST" duration-ms="20" status="PASS">
+        </test-method> <!-- EmpLoginCheck -->
+        <test-method signature="EmpLogoutCheck()[pri:2, instance:Demo.TC02@6f53b8a]" started-at="2025-11-03T01:36:06 IST" name="EmpLogoutCheck" finished-at="2025-11-03T01:36:06 IST" duration-ms="2" status="PASS">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- two -->
-      </class> <!-- Demo.TC01 -->
+        </test-method> <!-- EmpLogoutCheck -->
+      </class> <!-- Demo.TC02 -->
     </test> <!-- Test -->
   </suite> <!-- Test demo -->
 </testng-results>

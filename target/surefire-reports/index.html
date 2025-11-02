@@ -103,12 +103,12 @@
                     <div class="method-list-content passed suite-Test_demo">
                       <span>
                         <img src="passed.png" width="3%"/>
-                        <a href="#" panel-name="suite-Test_demo" title="Demo.TC01" class="method navigator-link" hash-for-method="one">one</a> <!-- method navigator-link -->
+                        <a href="#" panel-name="suite-Test_demo" title="Demo.TC02" class="method navigator-link" hash-for-method="EmpLoginCheck">EmpLoginCheck</a> <!-- method navigator-link -->
                       </span>
                       <br/>
                       <span>
                         <img src="passed.png" width="3%"/>
-                        <a href="#" panel-name="suite-Test_demo" title="Demo.TC01" class="method navigator-link" hash-for-method="two">two</a> <!-- method navigator-link -->
+                        <a href="#" panel-name="suite-Test_demo" title="Demo.TC02" class="method navigator-link" hash-for-method="EmpLogoutCheck">EmpLogoutCheck</a> <!-- method navigator-link -->
                       </span>
                       <br/>
                     </div> <!-- method-list-content passed suite-Test_demo -->
@@ -126,21 +126,21 @@
           <div class="suite-Test_demo-class-passed">
             <div class="main-panel-header rounded-window-top">
               <img src="passed.png"/>
-              <span class="class-name">Demo.TC01</span>
+              <span class="class-name">Demo.TC02</span>
             </div> <!-- main-panel-header rounded-window-top -->
             <div class="main-panel-content rounded-window-bottom">
               <div class="method">
                 <div class="method-content">
-                  <a name="one">
-                  </a> <!-- one -->
-                  <span class="method-name">one</span>
+                  <a name="EmpLoginCheck">
+                  </a> <!-- EmpLoginCheck -->
+                  <span class="method-name">EmpLoginCheck</span>
                 </div> <!-- method-content -->
               </div> <!-- method -->
               <div class="method">
                 <div class="method-content">
-                  <a name="two">
-                  </a> <!-- two -->
-                  <span class="method-name">two</span>
+                  <a name="EmpLogoutCheck">
+                  </a> <!-- EmpLogoutCheck -->
+                  <span class="method-name">EmpLogoutCheck</span>
                 </div> <!-- method-content -->
               </div> <!-- method -->
             </div> <!-- main-panel-content rounded-window-bottom -->
@@ -154,13 +154,13 @@
             <pre>
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;!DOCTYPE suite SYSTEM &quot;https://testng.org/testng-1.0.dtd&quot;&gt;
-&lt;suite name=&quot;Test demo&quot; guice-stage=&quot;DEVELOPMENT&quot; verbose=&quot;0&quot;&gt;
+&lt;suite thread-count=&quot;3&quot; parallel=&quot;classes&quot; name=&quot;Test demo&quot; guice-stage=&quot;DEVELOPMENT&quot; verbose=&quot;0&quot;&gt;
   &lt;listeners&gt;
-    &lt;listener class-name=&quot;listeners.ExtentVideoLogAttachListeners&quot;/&gt;
+    &lt;listener class-name=&quot;listeners.ExtentLogAttachListeners&quot;/&gt;
   &lt;/listeners&gt;
-  &lt;test thread-count=&quot;5&quot; name=&quot;Test&quot; verbose=&quot;0&quot;&gt;
+  &lt;test thread-count=&quot;3&quot; parallel=&quot;classes&quot; name=&quot;Test&quot; verbose=&quot;0&quot;&gt;
     &lt;classes&gt;
-      &lt;class name=&quot;Demo.TC01&quot;/&gt;
+      &lt;class name=&quot;Demo.TC02&quot;/&gt;
     &lt;/classes&gt;
   &lt;/test&gt; &lt;!-- Test --&gt;
 &lt;/suite&gt; &lt;!-- Test demo --&gt;
@@ -202,18 +202,18 @@ data.addColumn('string', 'Class');
 data.addColumn('number', 'Time (ms)');
 data.addRows(2);
 data.setCell(0, 0, 0)
-data.setCell(0, 1, 'one')
-data.setCell(0, 2, 'Demo.TC01')
-data.setCell(0, 3, 938);
+data.setCell(0, 1, 'EmpLoginCheck')
+data.setCell(0, 2, 'Demo.TC02')
+data.setCell(0, 3, 529);
 data.setCell(1, 0, 1)
-data.setCell(1, 1, 'two')
-data.setCell(1, 2, 'Demo.TC01')
-data.setCell(1, 3, 20);
+data.setCell(1, 1, 'EmpLogoutCheck')
+data.setCell(1, 2, 'Demo.TC02')
+data.setCell(1, 3, 2);
 window.suiteTableData['Test_demo']= { tableData: data, tableDiv: 'times-div-Test_demo'}
 return data;
 }
               </script>
-              <span class="suite-total-time">Total running time: 958 ms</span>
+              <span class="suite-total-time">Total running time: 531 ms</span>
               <div id="times-div-Test_demo">
               </div> <!-- times-div-Test_demo -->
             </div> <!-- times-div -->
@@ -239,14 +239,14 @@ return data;
           </div> <!-- main-panel-header rounded-window-top -->
           <div class="main-panel-content rounded-window-bottom">
             <div class="chronological-class">
-              <div class="chronological-class-name">Demo.TC01</div> <!-- chronological-class-name -->
+              <div class="chronological-class-name">Demo.TC02</div> <!-- chronological-class-name -->
               <div class="test-method">
-                <span class="method-name">one</span>
+                <span class="method-name">EmpLoginCheck</span>
                 <span class="method-start">0 ms</span>
               </div> <!-- test-method -->
               <div class="test-method">
-                <span class="method-name">two</span>
-                <span class="method-start">1053 ms</span>
+                <span class="method-name">EmpLogoutCheck</span>
+                <span class="method-start">539 ms</span>
               </div> <!-- test-method -->
           </div> <!-- main-panel-content rounded-window-bottom -->
         </div> <!-- panel -->

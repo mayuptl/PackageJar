@@ -1,35 +1,56 @@
 package Demo;
 
-import core.base.AppUtilTestBase;
+import core.base.TestBaseAppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class TC01 extends AppUtilTestBase {
+public class TC01 extends TestBaseAppUtil {
 
-    @Test
-    public void one()
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(TC01.class);
+
+    @BeforeClass
+    public void setup()
     {
-        Logger log= LogManager.getLogger("one");
-        System.out.println("Current working directory: " + System.getProperty("user.dir"));
-        log.info("Test case started");
-        log.info("This test1 log to test driver id logic This test1 log to test driver id logic This test1 log to test driver id logic");
-        log.error("This test1 log to test driver id logic This test1 log to test driver id logic This test1 log to test driver id logic");
-        log.warn("This test1 log to test driver id logic");
-        log.debug("This test1 log to test driver id logic");
-        Assert.assertTrue(true);
+        Logger classLog= LogManager.getLogger("TC01");
+        classLog.info("End to end start\n");
     }
-    @Test
-    public void two()
+    @AfterClass
+    public void tear()
     {
-        Logger log= LogManager.getLogger("two");
+        Logger classLog= LogManager.getLogger("TC01");
+        classLog.info("End to end completed\n");
+    }
+    @Test(priority = 1)
+    public void LoginCheck_()
+    {
+        Logger log= LogManager.getLogger("LoginCheck_");
+        POM pom = new POM(driver);
+        POMTwo pomtwo = new POMTwo(driver);
         log.info("Test case started");
+        pom.logCheck();
+        pomtwo.logCheck();
+        log.info("This test1 log to test driver id logic This test1 log to test driver id logic This test1 log to test driver id logic");
+        pomtwo.logCheckAnother();
+        pom.logCheckAnother();
+     /*   Assert.fail();
+        Assert.assertTrue(true);
+        log.info("Test case pass");
+        log.warn("after pass test");*/
+    }
+    @Test(priority = 2)
+    public void LogOutCheck_()
+    {
+        Logger log= LogManager.getLogger("LogOutCheck_");
+        log.info("Test case started");
+        POM pom = new POM(driver);
+        pom.logCheckAnother();
         log.info("This test2 log to test driver id logic");
-        log.error("This test2 log to test driver id logic");
-        log.warn("This test2 log to test driver id logic");
-        log.debug("This test2 log to test driver id logic");
-
-      //  Assert.fail();
+        Assert.assertTrue(true);
+        log.info("Test case pass\n");
     }
 }
