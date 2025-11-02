@@ -25,11 +25,11 @@ import java.util.Map;
 public class AppUtilTestBase {
     public WebDriver driver;
 
-    @BeforeClass
+  //  @BeforeClass
     public void lunchAppUtil()
     {
         String CUSTOM_OPTIONS = "ARG:--start-maximized,ARG:--incognito,ARG:--disable-infobars,ARG:--enable-logging=stderr,PREF:download.default_directory=/tmp/automation_downloads,CAP:acceptInsecureCerts=true";
-        driver = initDriverOptions("edge",CUSTOM_OPTIONS);
+        driver = initDriverOptions("chrome",CUSTOM_OPTIONS);
        // driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.get("https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager/6.3.2");
@@ -39,7 +39,7 @@ public class AppUtilTestBase {
      * Quits the current WebDriver instance and removes it from the ThreadLocal storage
      * via a single call to the DriverManager utility.
      */
-    @AfterClass
+ //   @AfterClass
     public void tearDownAppUtil() {
         DriverManager.quitDriver();
     }
