@@ -7,6 +7,7 @@ import core.log.LogExtractorUtils;
 import managers.DriverManager;
 import managers.ExtentManager;
 import managers.RecorderManager;
+import org.apache.logging.log4j.ThreadContext;
 import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -16,15 +17,16 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static core.config.ConfigReader.getBoolProp;
+import static core.config.ConfigReader.getStrProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 import static core.video.GetVideoFilePath.toGetVideoFilePath;
 
 public class ExtentVideoLogAttachListeners implements ITestListener {
 
-    private static final ExtentReports extent = ExtentManager.getReportIntance();
+    private static final ExtentReports extent = ExtentManager.getReportInstance();
     private static final Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
     private static final ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
-
     @Override
     public void onTestStart(ITestResult result) {
         String methodName = result.getMethod().getMethodName();
@@ -33,6 +35,10 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         ExtentTest classTest = classNodeMap.computeIfAbsent(className, extent::createTest);
         test = classTest.createNode(methodName);
         methodLevelTest.set(test);
+        //-------------------//
+        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
+        ThreadContext.put("driverId", currentInstanceID);
+        //------------------//
         // Add optional info
         Object[] params = result.getParameters();
         if (params.length > 0) {
@@ -57,8 +63,12 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         stopAndAttachVideo(test, result);
         attachScreenshot(test);
         test.pass("Test Passed");
-        String testLogs = LogExtractorUtils.toGetTestCaseLogs(result.getMethod().getMethodName());
-        test.info("Logs:<br>" + testLogs.replace("\n", "<br>"));
+
+        String safeDriverID = getDriverIdFromContext();
+        String methodName = result.getMethod().getMethodName();
+        attachLogs(test,safeDriverID,methodName);
+
+        //attachLogs(test,result);
         methodLevelTest.remove(); // ThreadLocal cleanup
     }
 
@@ -67,8 +77,11 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         ExtentTest test = methodLevelTest.get();
         stopAndAttachVideo(test, result);
         attachScreenshot(test);
-        String testLogs = LogExtractorUtils.toGetTestCaseLogs(result.getMethod().getMethodName());
-        test.info("Logs:<br>" + testLogs.replace("\n", "<br>"));
+
+        String safeDriverID = getDriverIdFromContext();
+        String methodName = result.getMethod().getMethodName();
+        attachLogs(test,safeDriverID,methodName);
+
         test.fail(result.getThrowable());
         methodLevelTest.remove(); // ThreadLocal cleanup
     }
@@ -86,15 +99,41 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         extent.flush();
     }
 
+    private void attachScreenshot(ExtentTest test) {
+        WebDriver driver = DriverManager.getDriver();
+        if (driver != null) {
+            String base64Screenshot = getBase64Screenshot(driver);
+            test.addScreenCaptureFromBase64String(base64Screenshot);
+        }
+    }
+    private String getDriverIdFromContext() {
+        // Retrieves the value safely bound to the current thread
+        return ThreadContext.get("driverId");
+    }
+    private void attachLogs(ExtentTest test,String driverID,String methodName)
+    {
+        String testLogs;
+        if(getBoolProp("LOG_BY_ID"))
+        {
+            testLogs = LogExtractorUtils.toGetTestCaseLogs(driverID);
+        }else {
+            testLogs = LogExtractorUtils.toGetTestCaseLogs(methodName);
+        }
+        String styledLogs=
+                "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
+                        + testLogs + "</pre></div>";
+        test.info(styledLogs);
+    }
     /** Stops the recorder, attaches the video link to the report, and cleans up Recorder ThreadLocal. */
     private void stopAndAttachVideo(ExtentTest test, ITestResult result) {
         try {
+            String methodName =result.getMethod().getMethodName();
             // 💡 Call the thread-safe manager's stop method
             RecorderManager.getRecorder().stop();
             // Assuming toGetVideoFilePath retrieves the HTML link with the video path
-            String videoLinkHtml = toGetVideoFilePath(result.getMethod().getMethodName());
+            String videoLinkHtml = toGetVideoFilePath(methodName);
             if (videoLinkHtml != null) {
-                test.info("Test Recording: " + videoLinkHtml);
+                test.info(videoLinkHtml +" :- " +methodName);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }
@@ -106,14 +145,6 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         } finally {
             // 💡 CRITICAL FIX: Clean up Recorder ThreadLocal, always runs
             RecorderManager.removeInstance();
-        }
-    }
-
-    private void attachScreenshot(ExtentTest test) {
-        WebDriver driver = DriverManager.getDriver();
-        if (driver != null) {
-            String base64Screenshot = getBase64Screenshot(driver);
-            test.addScreenCaptureFromBase64String(base64Screenshot);
         }
     }
 }

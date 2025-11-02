@@ -11,7 +11,8 @@ import static core.config.ConfigReader.getStrProp;
 
 public class LogExtractorUtils {
 
-    private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH");
+    //private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH");
+    private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH", "execution-output/test-logs/Logs.log");
 
     /** <b>Overload 1: Extracts logs using TestCaseName as the unique filter and the default path: ${user.dir}/execution-output/test-logs/Logs.log <b/>
      * @param uniqueLogFilter The test method name (e.g., "ToCheckLogin").

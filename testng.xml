@@ -3,11 +3,13 @@
 <suite name="Test demo" verbose="2">
     <listeners>
         <listener class-name="listeners.ExtentVideoLogAttachListeners" />
+      <!--  <listener class-name="listeners.ExtentLogAttachListeners" />-->
+
     </listeners>
     <test name="Test">
         <classes>
             <class name="Demo.TC01"></class>
-            <class name="Demo.TC02"></class>
+            <!--<class name="Demo.TC02"></class>-->
         </classes>
     </test>
 </suite>

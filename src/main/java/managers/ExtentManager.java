@@ -1,7 +1,6 @@
 package managers;
 
 import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
 
@@ -11,11 +10,11 @@ import static core.config.ConfigReader.getStrProp;
 
 public class ExtentManager {
     private static ExtentReports extent;
-    private static final String DEFAULT_REPORT_PATH = getStrProp("DEFAULT_EXTENT_REPORT_PATH");
+    private static final String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT","execution-output/test-reports/ExtentReport.html");
     /**
      * <b>Initializes ExtentReports using a custom path</b>
      */
-    public static ExtentReports getReportIntance(String reportFilePath) {
+    public static ExtentReports getReportInstance(String reportFilePath) {
         if (extent == null) {
             ExtentSparkReporter sparkReporter = new ExtentSparkReporter(reportFilePath);
             sparkReporter.config().setTheme(Theme.STANDARD);
@@ -33,7 +32,7 @@ public class ExtentManager {
     /**
      * <b>Initializes ExtentReports using the default path: execution-output/reports/ExtentReport.html</b>
      */
-    public static ExtentReports getReportIntance() {
-        return getReportIntance(DEFAULT_REPORT_PATH);
+    public static ExtentReports getReportInstance() {
+        return getReportInstance(DEFAULT_REPORT_PATH);
     }
 }

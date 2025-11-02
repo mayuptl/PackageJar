@@ -25,7 +25,7 @@ import static core.video.GetVideoFilePath.toGetVideoFilePath;
 
 public class ExtentVideoAttachListeners implements ITestListener {
 
-    private static final ExtentReports extent = ExtentManager.getReportIntance();
+    private static final ExtentReports extent = ExtentManager.getReportInstance();
     private static final Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
     private static final ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
 
@@ -92,12 +92,13 @@ public class ExtentVideoAttachListeners implements ITestListener {
     /** Stops the recorder, attaches the video link to the report, and cleans up Recorder ThreadLocal. */
     private void stopAndAttachVideo(ExtentTest test, ITestResult result) {
         try {
+            String methodName =result.getMethod().getMethodName();
             // 💡 Call the thread-safe manager's stop method
             RecorderManager.getRecorder().stop();
             // Assuming toGetVideoFilePath retrieves the HTML link with the video path
             String videoLinkHtml = toGetVideoFilePath(result.getMethod().getMethodName());
             if (videoLinkHtml != null) {
-                test.info("Test Recording: " + videoLinkHtml);
+                test.info(videoLinkHtml +" :- " +methodName);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }

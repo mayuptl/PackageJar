@@ -9,7 +9,7 @@ import static core.config.ConfigReader.getStrProp;
 public class RecorderManager {
     private static final ThreadLocal<TestRecorder> recorderThread = new ThreadLocal<>();
     // Default video folder (kept for the factory method)
-    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
+    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("TEST_RECORDINGS","execution-output/test-recordings/");
     /**
      * Initializes the thread-local recorder with a custom name and path.
      */

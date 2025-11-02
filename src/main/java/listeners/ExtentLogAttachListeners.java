@@ -5,6 +5,7 @@ import com.aventstack.extentreports.ExtentTest;
 import core.log.LogExtractorUtils;
 import managers.DriverManager;
 import managers.ExtentManager;
+import org.apache.logging.log4j.ThreadContext;
 import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -14,10 +15,11 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static core.config.ConfigReader.getBoolProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 
 public class ExtentLogAttachListeners implements ITestListener {
-    private static ExtentReports extent = ExtentManager.getReportIntance();
+    private static ExtentReports extent = ExtentManager.getReportInstance();
     private static Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
     private static ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
 
@@ -28,7 +30,10 @@ public class ExtentLogAttachListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         ExtentTest methodTest = classTest.createNode(methodName);
         methodLevelTest.set(methodTest);
-
+        //-------------------//
+        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
+        ThreadContext.put("driverId", currentInstanceID);
+        //------------------//
         Object[] params = result.getParameters();
         if (params.length > 0) {
             methodTest.info("Parameters: " + Arrays.toString(params));
@@ -48,8 +53,9 @@ public class ExtentLogAttachListeners implements ITestListener {
             String base64Screenshot = getBase64Screenshot(driver);
             methodLevelTest.get().addScreenCaptureFromBase64String(base64Screenshot);
         }
-        String testLogs = LogExtractorUtils.toGetTestCaseLogs(result.getMethod().getMethodName());
-        test.info("Logs:<br>" + testLogs.replace("\n", "<br>"));
+        String safeDriverID = getDriverIdFromContext();
+        String methodName = result.getMethod().getMethodName();
+        attachLogs(test,safeDriverID,methodName);
         methodLevelTest.remove();
     }
 
@@ -61,9 +67,9 @@ public class ExtentLogAttachListeners implements ITestListener {
             String base64Screenshot = getBase64Screenshot(driver);
             methodLevelTest.get().addScreenCaptureFromBase64String(base64Screenshot);
         }
-        String testLogs = LogExtractorUtils.toGetTestCaseLogs(result.getMethod().getMethodName());
-        test.info("Logs:<br>" + testLogs.replace("\n", "<br>"));
-
+        String safeDriverID = getDriverIdFromContext();
+        String methodName = result.getMethod().getMethodName();
+        attachLogs(test,safeDriverID,methodName);
         methodLevelTest.get().fail(result.getThrowable());
         methodLevelTest.remove();
     }
@@ -77,6 +83,25 @@ public class ExtentLogAttachListeners implements ITestListener {
     @Override
     public void onFinish(ITestContext context) {
         extent.flush();
+    }
+
+    private String getDriverIdFromContext() {
+        // Retrieves the value safely bound to the current thread
+        return ThreadContext.get("driverId");
+    }
+    private void attachLogs(ExtentTest test,String driverID,String methodName)
+    {
+        String testLogs;
+        if(getBoolProp("LOG_BY_ID"))
+        {
+            testLogs = LogExtractorUtils.toGetTestCaseLogs(driverID);
+        }else {
+            testLogs = LogExtractorUtils.toGetTestCaseLogs(methodName);
+        }
+        String styledLogs=
+                "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
+                        + testLogs + "</pre></div>";
+        test.info(styledLogs);
     }
 
 }

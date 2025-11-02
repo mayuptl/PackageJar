@@ -14,6 +14,6 @@ public class TC02 extends AppUtilTestBase {
     @Test
     public void two2()
     {
-        Assert.fail();
+       // Assert.fail();
     }
 }

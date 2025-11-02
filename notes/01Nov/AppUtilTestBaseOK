@@ -1,0 +1,305 @@
+package core.base;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import managers.DriverManager;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.safari.SafariOptions;
+import org.testng.annotations.BeforeClass;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static core.config.ConfigReader.getIntProp;
+import static core.config.ConfigReader.getStrProp;
+
+public class AppUtilTestBase {
+
+    public WebDriver driver;
+    private final String DEFAULT_BROWSER = getStrProp("BROWSER","chrome");
+    private final String DEFAULT_URL = getStrProp("URL","about:blank"); // Replace with your default URL
+    /**
+     * Public method 1: <b>Launches the application using default browser:chrome, URL:amazon, and wait time:10 sec</b>.
+     */
+    @BeforeClass(alwaysRun = true)
+    public void launchApplication() {
+        // Calls the core logic with predefined constants
+        launchApplicationCore(DEFAULT_BROWSER, DEFAULT_URL,"");
+    }
+
+    /**
+     * Public method 2: <b>Launches the application using user-provided values.</b>
+     *
+     * @param browserName         The name of the browser (e.g., "chrome", "firefox","edge").
+     * @param appUrl              The URL of the application.
+     * @param implicitlyWaitInSec The implicit wait timeout in seconds.
+     * @return
+     */
+    //@BeforeClass(alwaysRun = true)
+    public WebDriver launchApplication(String browserName, String appUrl,String driverPath) {
+        // Calls the core logic with user-provided arguments
+       return launchApplicationCore(browserName, appUrl,driverPath);
+    }
+
+    /**
+     * Private core method: Contains the actual implementation logic.
+     *
+     * @param browserName         The browser name.
+     * @param appUrl              The application URL.
+     * @param implicitlyWaitInSec The implicit wait timeout.
+     * @return
+     */
+    private WebDriver launchApplicationCore(String browserName, String appUrl, String driverPath) {
+        WebDriver driver = initDriver(browserName,driverPath);
+        driver.get(appUrl);
+        return DriverManager.getDriver();
+    }
+    public WebDriver initDriver(String BrowserName)
+    {
+        return initDriverCore(BrowserName,"","");
+    }
+    public WebDriver initDriver(String BrowserName, String driverPath)
+    {
+       return initDriverCore(BrowserName,driverPath,"");
+    }
+    public WebDriver initDriver(String BrowserName, String driverPath,String customOptions)
+    {
+        return initDriverCore(BrowserName,driverPath,customOptions);
+    }
+
+  /*  private WebDriver initDriverCore(String BrowserName, String driverPath,String customOptions) {
+        WebDriver driver;
+        if (BrowserName.contains("edge"))
+        {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.edge.driver", driverPath);
+            } else {
+                WebDriverManager.edgedriver().setup();
+            }
+            EdgeOptions options = new EdgeOptions();
+            if (BrowserName.contains("headless")) {
+                options.addArguments("--headless=new");
+            }
+            if (customOptions != null && !customOptions.isEmpty()) {
+                String[] argsArray = customOptions.split(",");
+                for (String arg : argsArray) {
+                    options.addArguments(arg.trim());
+                }
+            }
+            driver = new EdgeDriver(options);
+        } else if (BrowserName.contains("chrome"))
+        {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.chrome.driver", driverPath);
+            } else {
+                WebDriverManager.chromedriver().setup();
+            }
+            ChromeOptions options = new ChromeOptions();
+            if (BrowserName.contains("headless")) {
+                options.addArguments("--headless=new");
+            }
+            if (customOptions != null && !customOptions.isEmpty()) {
+                String[] argsArray = customOptions.split(",");
+                for (String arg : argsArray) {
+                    options.addArguments(arg.trim());
+                }
+            }
+            driver = new ChromeDriver(options);
+        } else if (BrowserName.contains("firefox")) {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.gecko.driver", driverPath);
+            } else {
+                WebDriverManager.firefoxdriver().setup();
+            }
+            FirefoxOptions options = new FirefoxOptions();
+            if (BrowserName.contains("headless")) {
+                options.addArguments("--headless=new");
+            }
+            if (customOptions != null && !customOptions.isEmpty()) {
+                String[] argsArray = customOptions.split(",");
+                for (String arg : argsArray) {
+                    options.addArguments(arg.trim());
+                }
+            }
+            driver = new FirefoxDriver(options);
+        } else if (BrowserName.contains("safari")) {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.safari.driver", driverPath);
+            } else {
+                //WebDriverManager.safaridriver().setup();
+            }
+            SafariOptions options = new SafariOptions();
+            driver = new SafariDriver(options);
+        } else {
+            throw new IllegalArgumentException("Unsupported browser specified: " + BrowserName +
+                    ". Supported browsers are: edge, chrome, firefox, safari, edge headless, chrome headless, firefox headless");
+        }
+        DriverManager.setDriver(driver);
+        return driver;
+    }*/
+    /**
+     * Core method for driver initialization, supporting manual path and complex options parsing.
+     *
+     * @param BrowserName The name of the browser (e.g., "chrome", "edge headless").
+     * @param driverPath The manual path to the driver executable.
+     * @param customOptions Comma-separated string of custom options (ARG:..., PREF:..., CAP:...).
+     * @return The initialized WebDriver instance.
+     */
+    private WebDriver initDriverCore(String BrowserName, String driverPath, String customOptions) {
+        WebDriver driver;
+        // Map to hold preferences (for Chrome, Edge, Firefox)
+        Map<String, Object> prefs = new HashMap<>();
+        // Map to hold capabilities (used for options configuration)
+        Map<String, Object> caps = new HashMap<>();
+        // --- Options Parsing ---
+        if (customOptions != null && !customOptions.isEmpty()) {
+            String[] optionsArray = customOptions.split(",");
+            for (String option : optionsArray) {
+                String trimmedOption = option.trim();
+
+                if (trimmedOption.startsWith("PREF:")) {
+                    // Handle Browser Preferences (e.g., PREF:download.default_directory=/tmp)
+                    try {
+                        String prefString = trimmedOption.substring(5);
+                        String[] parts = prefString.split("=", 2);
+                        if (parts.length == 2) {
+                            // Simple type parsing: if it looks like a boolean or number, try to cast it
+                            Object value = parts[1];
+                            if (value.toString().equalsIgnoreCase("true")) value = true;
+                            else if (value.toString().equalsIgnoreCase("false")) value = false;
+                            prefs.put(parts[0], value);
+                        }
+                    } catch (Exception e) {
+
+                    }
+                } else if (trimmedOption.startsWith("CAP:")) {
+                    // Handle General Capabilities (e.g., CAP:acceptInsecureCerts=true)
+                    try {
+                        String capString = trimmedOption.substring(4);
+                        String[] parts = capString.split("=", 2);
+                        if (parts.length == 2) {
+                            // Simple string/boolean type conversion
+                            Object value = parts[1].equalsIgnoreCase("true") ? true : (parts[1].equalsIgnoreCase("false") ? false : parts[1]);
+                            caps.put(parts[0], value);
+                        }
+                    } catch (Exception e) {
+
+                    }
+                }
+                // Arguments are handled below (ARG: is optional, default is ARG)
+            }
+        }
+        // --- Driver Initialization Logic ---
+        if (BrowserName.contains("edge")) {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.edge.driver", driverPath);
+            } else {
+                WebDriverManager.edgedriver().setup();
+            }
+            EdgeOptions options = new EdgeOptions();
+            // Edge uses 'ms:edgeOptions' for preferences
+            if (!prefs.isEmpty()) {
+                options.setCapability("ms:edgeOptions", prefs);
+            }
+            if (BrowserName.contains("headless")) {
+                options.addArguments("--headless=new");
+            }
+            // Apply arguments and capabilities
+            applyOptions(options, customOptions, caps);
+            driver = new EdgeDriver(options);
+        } else if (BrowserName.contains("chrome")) {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.chrome.driver", driverPath);
+            } else {
+                WebDriverManager.chromedriver().setup();
+            }
+            ChromeOptions options = new ChromeOptions();
+            // Chrome uses 'prefs' for preferences
+            if (!prefs.isEmpty()) {
+                options.setExperimentalOption("prefs", prefs);
+            }
+            if (BrowserName.contains("headless")) {
+                options.addArguments("--headless=new");
+            }
+            // Apply arguments and capabilities
+            applyOptions(options, customOptions, caps);
+
+            driver = new ChromeDriver(options);
+        } else if (BrowserName.contains("firefox")) {
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.gecko.driver", driverPath);
+            } else {
+                WebDriverManager.firefoxdriver().setup();
+            }
+            FirefoxOptions options = new FirefoxOptions();
+
+            // Firefox preferences are applied directly using addPreference
+            prefs.forEach((key, value) -> options.addPreference(key, value.toString()));
+
+            if (BrowserName.contains("headless")) {
+                options.addArguments("-headless"); // Firefox uses -headless
+            }
+
+            // Apply arguments and capabilities
+            applyOptions(options, customOptions, caps);
+
+            driver = new FirefoxDriver(options);
+        } else if (BrowserName.contains("safari")) {
+            // Safari driver is managed by the OS and WebDriverManager setup is redundant
+            if (driverPath != null && !driverPath.isEmpty()) {
+                System.setProperty("webdriver.safari.driver", driverPath);
+            }
+            // Safari does not support traditional command-line arguments like Chrome/Edge
+            SafariOptions options = new SafariOptions();
+            // Apply capabilities (arguments are ignored for Safari)
+            caps.forEach(options::setCapability);
+            driver = new SafariDriver(options);
+        } else {
+            throw new IllegalArgumentException("Unsupported browser specified: " + BrowserName +
+                    ". Supported browsers are: edge, chrome, firefox, safari, edge headless, chrome headless, firefox headless");
+        }
+        DriverManager.setDriver(driver);
+        return driver;
+    }
+    /**
+     * Helper method to apply command-line arguments and capabilities to the browser options.
+     * This method assumes the options object has a compatible method (like addArguments/setCapability).
+     */
+    private void applyOptions(org.openqa.selenium.MutableCapabilities options, String customOptions, Map<String, Object> caps) {
+        // 1. Apply Command-Line Arguments (ARG:)
+        if (customOptions != null && !customOptions.isEmpty()) {
+            String[] optionsArray = customOptions.split(",");
+            for (String option : optionsArray) {
+                String trimmedOption = option.trim();
+
+                // Only process items that are arguments (ARG: or no prefix)
+                if (!trimmedOption.isEmpty()) {
+                    if (trimmedOption.startsWith("ARG:") || (!trimmedOption.contains(":") && !trimmedOption.contains("="))) {
+
+                        String arg = trimmedOption.startsWith("ARG:") ? trimmedOption.substring(4) : trimmedOption;
+
+                        // We check the options type to ensure we call the right method
+                        if (options instanceof ChromeOptions) {
+                            ((ChromeOptions) options).addArguments(arg);
+                        } else if (options instanceof EdgeOptions) {
+                            ((EdgeOptions) options).addArguments(arg);
+                        } else if (options instanceof FirefoxOptions) {
+                            ((FirefoxOptions) options).addArguments(arg);
+                        }
+                    }
+                }
+            }
+        }
+        // 2. Apply Capabilities (CAP:)
+        caps.forEach(options::setCapability);
+    }
+   // @AfterClass(alwaysRun = true)
+    public void tearDown() {
+        DriverManager.quitDriver();
+    }
+}

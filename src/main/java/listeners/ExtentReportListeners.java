@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 
 public class ExtentReportListeners implements ITestListener {
-    private static ExtentReports extent = ExtentManager.getReportIntance();
+    private static ExtentReports extent = ExtentManager.getReportInstance();
     private static Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
     private static ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
 

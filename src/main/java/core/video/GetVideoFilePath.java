@@ -7,7 +7,10 @@ import java.util.Objects;
 import static core.config.ConfigReader.getStrProp;
 
 public class GetVideoFilePath {
-    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
+    //private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
+    //**NEW (Will safely default to `target/videos` if config file or key is missing):**
+    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("TEST_RECORDINGS", "execution-output/test-recordings/");
+
     public static String toGetVideoFilePath(String testCaseName)
     {
         // Calls the primary implementation with the default extension

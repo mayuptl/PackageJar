@@ -5,7 +5,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
@@ -13,6 +13,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
+        <!-- Removed redundant compiler source/target properties since we now use the <release> tag below -->
     </properties>
 
     <dependencies>
@@ -22,6 +23,22 @@
             <artifactId>selenium-java</artifactId>
             <version>4.37.0</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>6.3.2</version>
         </dependency>
         <!-- Apache POI: Core components -->
         <!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
@@ -62,6 +79,16 @@
             <artifactId>testng</artifactId>
             <version>7.11.0</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.aventstack/extentreports -->
         <dependency>
@@ -69,11 +96,11 @@
             <artifactId>extentreports</artifactId>
             <version>5.1.2</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-nop -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>2.0.17</version>
+            <version>2.0.16</version>
+            <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
@@ -105,8 +132,60 @@
                         <configuration>
                             <finalName>app-utils-fat-${project.version}</finalName>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <!--
+                                FIX: Filters out module-info, version-specific classes,
+                                and other files that conflict during shading.
+                            -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact> <!-- Apply to all dependencies -->
+                                    <excludes>
+                                        <!-- Exclude all common logging configuration files -->
+                                        <exclude>log4j2.xml</exclude>
+                                        <exclude>log4j2.properties</exclude>
+                                        <exclude>log4j.xml</exclude>
+                                        <exclude>log4j.properties</exclude>
+                                        <exclude>simplelogger.properties</exclude>
+                                        <!-- EXCLUDED: Prevents conflict with consumer's configuration -->
+                                        <exclude>config.properties</exclude>
+                                        <!-- Exclude security signatures -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <!-- FIX: Overlapping resource warnings / JPMS issues -->
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/**</exclude>
+                                        <exclude>META-INF/services/javax.annotation.processing.Processor</exclude>
+
+                                        <!-- FIX: Overlapping metadata files -->
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/DEPENDENCIES</exclude>
+
+                                        <!-- The other overlapping files (NOTICE/LICENSE) will be merged by transformers below -->
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <!-- Merge all NOTICE and LICENSE files (both .txt and non-.txt versions) instead of dropping/overwriting -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/NOTICE</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/LICENSE</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/NOTICE.txt</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/LICENSE.txt</resource>
+                                </transformer>
+                            </transformers>
                             <!--relacation: will prevent dependency conflict in user project-->
                             <relocations>
+                                <relocation>
+                                    <pattern>io.github.bonigarcia</pattern>
+                                    <shadedPattern>org.example.apputils.shaded.webdrivermanager</shadedPattern>
+                                </relocation>
                                 <relocation>
                                     <pattern>org.apache.poi</pattern>
                                     <shadedPattern>org.example.apputils.shaded.poi</shadedPattern>
@@ -124,19 +203,19 @@
                                     <shadedPattern>org.example.apputils.shaded.monte</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.github.stephenc.monte</pattern>
+                                    <pattern>com.aventstack</pattern>
                                     <shadedPattern>org.example.apputils.shaded.extentreports</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.github.stephenc.monte</pattern>
+                                    <pattern>org.slf4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.slf4j-nop</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.github.stephenc.monte</pattern>
+                                    <pattern>org.apache.logging.log4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.log4j-core</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.github.stephenc.monte</pattern>
+                                    <pattern>org.apache.logging.log4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.log4j-api</shadedPattern>
                                 </relocation>
                             </relocations>
@@ -154,29 +233,32 @@
                 </configuration>
             </plugin>
             <!-- 2. Javadoc Plugin (Attaches Documentation) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <docfilessubdirs>true</docfilessubdirs>
-                    <failOnError>false</failOnError>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--            <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <version>3.6.3</version>
+                            <configuration>
+                                <docfilessubdirs>true</docfilessubdirs>
+                                <failOnError>false</failOnError>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>attach-javadocs</id>
+                                    <goals>
+                                        <goal>jar</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <!-- Using the modern <release> tag for Java 9+ is the recommended approach.
+                         It sets source, target, and correctly configures the Java Module System,
+                         which resolves the "option -source cannot be used together with -release" error. -->
+                    <release>16</release>
                 </configuration>
             </plugin>
             <plugin>
