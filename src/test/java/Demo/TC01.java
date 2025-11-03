@@ -3,7 +3,6 @@ package Demo;
 import core.base.TestBaseAppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -11,7 +10,7 @@ import org.testng.annotations.Test;
 
 public class TC01 extends TestBaseAppUtil {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(TC01.class);
+    private static final Logger log = LogManager.getLogger(TC01.class);
 
     @BeforeClass
     public void setup()

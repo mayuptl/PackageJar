@@ -239,7 +239,6 @@ public class TestBaseAppUtil {
             String[] optionsArray = customOptions.split(",");
             for (String option : optionsArray) {
                 String trimmedOption = option.trim();
-
                 // Only process items that are arguments (ARG: or no prefix)
                 if (!trimmedOption.isEmpty()) {
                     if (trimmedOption.startsWith("ARG:") || (!trimmedOption.contains(":") && !trimmedOption.contains("="))) {

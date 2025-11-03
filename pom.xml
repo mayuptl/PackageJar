@@ -5,7 +5,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>3.3.2-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
@@ -100,7 +100,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
             <version>2.0.16</version>
-            <scope>provided</scope>
+           <!-- <scope>provided</scope>-->
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
@@ -132,10 +132,6 @@
                         <configuration>
                             <finalName>app-utils-fat-${project.version}</finalName>
                             <createDependencyReducedPom>true</createDependencyReducedPom>
-                            <!--
-                                FIX: Filters out module-info, version-specific classes,
-                                and other files that conflict during shading.
-                            -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact> <!-- Apply to all dependencies -->
@@ -156,16 +152,15 @@
                                         <exclude>module-info.class</exclude>
                                         <exclude>META-INF/versions/**</exclude>
                                         <exclude>META-INF/services/javax.annotation.processing.Processor</exclude>
-
                                         <!-- FIX: Overlapping metadata files -->
                                         <exclude>META-INF/MANIFEST.MF</exclude>
                                         <exclude>META-INF/DEPENDENCIES</exclude>
-
                                         <!-- The other overlapping files (NOTICE/LICENSE) will be merged by transformers below -->
                                     </excludes>
                                 </filter>
                             </filters>
                             <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <!-- Merge all NOTICE and LICENSE files (both .txt and non-.txt versions) instead of dropping/overwriting -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/NOTICE</resource>
@@ -180,7 +175,7 @@
                                     <resource>META-INF/LICENSE.txt</resource>
                                 </transformer>
                             </transformers>
-                            <!--relacation: will prevent dependency conflict in user project-->
+                            <!--relocation: will prevent dependency conflict in user project-->
                             <relocations>
                                 <relocation>
                                     <pattern>io.github.bonigarcia</pattern>
@@ -206,18 +201,18 @@
                                     <pattern>com.aventstack</pattern>
                                     <shadedPattern>org.example.apputils.shaded.extentreports</shadedPattern>
                                 </relocation>
-                                <relocation>
+                               <!-- <relocation>
                                     <pattern>org.slf4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.slf4j-nop</shadedPattern>
-                                </relocation>
-                                <relocation>
+                                </relocation>-->
+                                <!--<relocation>
                                     <pattern>org.apache.logging.log4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.log4j-core</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.apache.logging.log4j</pattern>
                                     <shadedPattern>org.example.apputils.shaded.log4j-api</shadedPattern>
-                                </relocation>
+                                </relocation>-->
                                 <relocation>
                                     <pattern>org.apache.hc.client5</pattern>
                                     <shadedPattern>org.example.apputils.shaded.httpclient5</shadedPattern>
@@ -263,9 +258,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <!-- Using the modern <release> tag for Java 9+ is the recommended approach.
-                         It sets source, target, and correctly configures the Java Module System,
-                         which resolves the "option -source cannot be used together with -release" error. -->
                     <release>16</release>
                 </configuration>
             </plugin>
