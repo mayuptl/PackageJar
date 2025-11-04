@@ -8,7 +8,7 @@
     <test name="Test">
         <classes>
             <!--<class name="Demo.TC01"></class>-->
-            <class name="Demo.TC02"></class>
+            <class name="Demo.TC01"></class>
             <!--<class name="Demo.TC03"></class>-->
         </classes>
     </test>

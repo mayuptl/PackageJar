@@ -27,11 +27,13 @@ import java.util.Map;
 public class TestBaseAppUtil {
     public WebDriver driver;
 
-   // @BeforeClass
+    @BeforeClass
     public void lunchAppUtil()
     {
-        String CUSTOM_OPTIONS = "ARG:--start-maximized,ARG:--incognito,ARG:--disable-infobars,ARG:--enable-logging=stderr,PREF:download.default_directory=/tmp/automation_downloads,CAP:acceptInsecureCerts=true";
-        driver = initDriverOptions("chrome",CUSTOM_OPTIONS);
+        String CUSTOM_OPTIONS = "ARG:--force-device-scale-factor=0.8,ARG:--start-maximized,ARG:--incognito,ARG:--disable-infobars,ARG:--enable-logging=stderr,PREF:download.default_directory=/execution-output/test-downloads/,CAP:acceptInsecureCerts=true";
+        String driverPath= "D:\\Work\\Automation\\app-utils\\app-utils\\notes\\msedgedriver.exe";
+        //driver = initDriverOptions("firefox",CUSTOM_OPTIONS);
+        driver =  initDriver("edge",driverPath,CUSTOM_OPTIONS);
        // driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.get("https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager/6.3.2");
@@ -41,7 +43,7 @@ public class TestBaseAppUtil {
      * Quits the current WebDriver instance and removes it from the ThreadLocal storage
      * via a single call to the DriverManager utility.
      */
-   // @AfterClass
+    @AfterClass
     public void tearDownAppUtil() {
         DriverManager.quitDriver();
     }
@@ -55,7 +57,6 @@ public class TestBaseAppUtil {
 
         return initDriverCore(BrowserName, "", "");
     }
-
     /**
      * Public method to initialize the driver with a manual path.
      *
@@ -76,7 +77,6 @@ public class TestBaseAppUtil {
     public WebDriver initDriverOptions(String BrowserName, String customOptions) {
         return initDriverCore(BrowserName,"",customOptions );
     }
-
     /**
      * Public method to initialize the driver with a manual path and custom options.
      *
@@ -88,7 +88,6 @@ public class TestBaseAppUtil {
     public WebDriver initDriver(String BrowserName, String driverPath, String customOptions) {
         return initDriverCore(BrowserName, driverPath, customOptions);
     }
-
     /**
      * Core method for driver initialization.
      * It handles WebDriverManager setup, manual driver path configuration,
@@ -105,13 +104,11 @@ public class TestBaseAppUtil {
         Map<String, Object> prefs = new HashMap<>();
         // Map to hold capabilities (used for options configuration)
         Map<String, Object> caps = new HashMap<>();
-
         // --- Options Parsing ---
         if (customOptions != null && !customOptions.isEmpty()) {
             String[] optionsArray = customOptions.split(",");
             for (String option : optionsArray) {
                 String trimmedOption = option.trim();
-
                 if (trimmedOption.startsWith("PREF:")) {
                     // Handle Browser Preferences (e.g., PREF:download.default_directory=/tmp)
                     try {
@@ -122,7 +119,6 @@ public class TestBaseAppUtil {
                             Object value = parts[1];
                             if (value.toString().equalsIgnoreCase("true")) value = true;
                             else if (value.toString().equalsIgnoreCase("false")) value = false;
-
                             prefs.put(parts[0], value);
                         }
                     } catch (Exception e) {
@@ -145,7 +141,6 @@ public class TestBaseAppUtil {
                 // Arguments are handled below (ARG: is optional, default is ARG)
             }
         }
-
         // --- Driver Initialization Logic ---
         if (BrowserName.contains("edge")) {
             if (driverPath != null && !driverPath.isEmpty()) {
@@ -154,19 +149,18 @@ public class TestBaseAppUtil {
                 WebDriverManager.edgedriver().setup();
             }
             EdgeOptions options = new EdgeOptions();
-
             // Edge uses 'ms:edgeOptions' for preferences
-            if (!prefs.isEmpty()) {
+           /* if (!prefs.isEmpty()) {
                 options.setCapability("ms:edgeOptions", prefs);
+            }*/
+            if (!prefs.isEmpty()) {
+                options.setExperimentalOption("prefs", prefs);
             }
-
             if (BrowserName.contains("headless")) {
                 options.addArguments("--headless=new");
             }
-
             // Apply arguments and capabilities
             applyOptions(options, customOptions, caps);
-
             driver = new EdgeDriver(options);
         } else if (BrowserName.contains("chrome")) {
             if (driverPath != null && !driverPath.isEmpty()) {
@@ -175,16 +169,13 @@ public class TestBaseAppUtil {
                 WebDriverManager.chromedriver().setup();
             }
             ChromeOptions options = new ChromeOptions();
-
             // Chrome uses 'prefs' for preferences
             if (!prefs.isEmpty()) {
                 options.setExperimentalOption("prefs", prefs);
             }
-
             if (BrowserName.contains("headless")) {
                 options.addArguments("--headless=new");
             }
-
             // Apply arguments and capabilities
             applyOptions(options, customOptions, caps);
 
@@ -196,30 +187,23 @@ public class TestBaseAppUtil {
                 WebDriverManager.firefoxdriver().setup();
             }
             FirefoxOptions options = new FirefoxOptions();
-
             // Firefox preferences are applied directly using addPreference
             prefs.forEach((key, value) -> options.addPreference(key, value.toString()));
-
             if (BrowserName.contains("headless")) {
                 options.addArguments("-headless"); // Firefox uses -headless
             }
-
             // Apply arguments and capabilities
             applyOptions(options, customOptions, caps);
-
             driver = new FirefoxDriver(options);
         } else if (BrowserName.contains("safari")) {
             // Safari driver is managed by the OS and WebDriverManager setup is redundant
             if (driverPath != null && !driverPath.isEmpty()) {
                 System.setProperty("webdriver.safari.driver", driverPath);
             }
-
             // Safari does not support traditional command-line arguments like Chrome/Edge
             SafariOptions options = new SafariOptions();
-
             // Apply capabilities (arguments are ignored for Safari)
             caps.forEach(options::setCapability);
-
             driver = new SafariDriver(options);
         } else {
             throw new IllegalArgumentException("Unsupported browser specified: " + BrowserName +
@@ -228,7 +212,6 @@ public class TestBaseAppUtil {
         DriverManager.setDriver(driver);
         return driver;
     }
-
     /**
      * Helper method to apply command-line arguments and capabilities to the browser options.
      * This method assumes the options object has a compatible method (like addArguments/setCapability).
@@ -242,9 +225,7 @@ public class TestBaseAppUtil {
                 // Only process items that are arguments (ARG: or no prefix)
                 if (!trimmedOption.isEmpty()) {
                     if (trimmedOption.startsWith("ARG:") || (!trimmedOption.contains(":") && !trimmedOption.contains("="))) {
-
                         String arg = trimmedOption.startsWith("ARG:") ? trimmedOption.substring(4) : trimmedOption;
-
                         // We check the options type to ensure we call the right method
                         if (options instanceof ChromeOptions) {
                             ((ChromeOptions) options).addArguments(arg);

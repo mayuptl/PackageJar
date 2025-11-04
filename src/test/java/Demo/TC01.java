@@ -8,6 +8,9 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import static core.screenshot.ScreenshotUtil.stepScreenshot;
+import static core.wait.WaitUtil.staticWait;
+
 public class TC01 extends TestBaseAppUtil {
 
     private static final Logger log = LogManager.getLogger(TC01.class);
@@ -31,6 +34,9 @@ public class TC01 extends TestBaseAppUtil {
         POM pom = new POM(driver);
         POMTwo pomtwo = new POMTwo(driver);
         log.info("Test case started");
+        System.err.println(driver.getCurrentUrl());
+        staticWait(3);
+        stepScreenshot("current url");
         pom.logCheck();
         pomtwo.logCheck();
         log.info("This test1 log to test driver id logic This test1 log to test driver id logic This test1 log to test driver id logic");
