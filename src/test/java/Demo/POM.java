@@ -1,5 +1,6 @@
 package Demo;
 
+import core.screenshot.ScreenshotUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
@@ -20,6 +21,7 @@ public class POM {
     public void logCheckAnother()
     {
         log.info("This is from pom - logCheckAnother");
+        ScreenshotUtil.stepss("This is from pom - logCheckAnother");
     }
 
 }

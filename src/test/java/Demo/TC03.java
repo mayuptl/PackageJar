@@ -1,6 +1,7 @@
 package Demo;
 
 import core.base.TestBaseAppUtil;
+import core.screenshot.ScreenshotUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
@@ -29,6 +30,7 @@ public class TC03 extends TestBaseAppUtil {
         POM pom = new POM(driver);
         POMTwo pomtwo = new POMTwo(driver);
         log.info("Test case started");
+        ScreenshotUtil.stepss("Glasgow_");
         pom.logCheck();
         pomtwo.logCheck();
         log.info("This test1 log to test driver id logic This test1 log to test driver id logic This test1 log to test driver id logic");
@@ -46,6 +48,7 @@ public class TC03 extends TestBaseAppUtil {
         log.info("Test case started");
         POM pom = new POM(driver);
         pom.logCheckAnother();
+        ScreenshotUtil.stepss("London");
         log.info("This test2 log to test driver id logic");
         Assert.assertTrue(true);
         log.info("Test case pass\n");

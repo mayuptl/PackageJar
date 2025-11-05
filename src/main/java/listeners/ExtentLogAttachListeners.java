@@ -19,65 +19,59 @@ import static core.config.ConfigReader.getBoolProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 
 public class ExtentLogAttachListeners implements ITestListener {
-    private static ExtentReports extent = ExtentManager.getReportInstance();
-    private static Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
-    private static ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
+    private static final ExtentReports extent = ExtentManager.getReportInstance();
 
     @Override
     public void onTestStart(ITestResult result) {
         String className = result.getTestClass().getRealClass().getSimpleName();
-        ExtentTest classTest = classNodeMap.computeIfAbsent(className, k -> extent.createTest(k));
+        ExtentTest classNode = ExtentManager.getOrCreateClassNode(className);
+
         String methodName = result.getMethod().getMethodName();
-        ExtentTest methodTest = classTest.createNode(methodName);
-        methodLevelTest.set(methodTest);
+        ExtentTest methodNode = classNode.createNode(methodName);
+        ExtentManager.setTest(methodNode);
         //-------------------//
         String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
         ThreadContext.put("driverId", currentInstanceID);
         //------------------//
         Object[] params = result.getParameters();
         if (params.length > 0) {
-            methodTest.info("Parameters: " + Arrays.toString(params));
+            methodNode.info("Parameters: " + Arrays.toString(params));
         }
         Object[] groups = result.getMethod().getGroups();
         if (groups.length > 0) {
-            methodTest.info("groups: " + Arrays.toString(groups));
+            methodNode.info("groups: " + Arrays.toString(groups));
         }
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        ExtentTest test = methodLevelTest.get();
-       // test.pass("Test Passed");
-        WebDriver driver = DriverManager.getDriver();
-        if (driver != null) {
-            String base64Screenshot = getBase64Screenshot(driver);
-            methodLevelTest.get().addScreenCaptureFromBase64String(base64Screenshot);
-        }
+        ExtentTest test = ExtentManager.getTest();
+        /*attachScreenshot(test;*/
         String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
         attachLogs(test,safeDriverID,methodName);
-        methodLevelTest.remove();
+
+        ExtentManager.removeTest();
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        ExtentTest test = methodLevelTest.get();
-        WebDriver driver = DriverManager.getDriver();
-        if (driver != null) {
-            String base64Screenshot = getBase64Screenshot(driver);
-            methodLevelTest.get().addScreenCaptureFromBase64String(base64Screenshot);
-        }
+        ExtentTest test = ExtentManager.getTest();
+        attachScreenshot(test);
+
         String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
         attachLogs(test,safeDriverID,methodName);
-        methodLevelTest.get().fail(result.getThrowable());
-        methodLevelTest.remove();
+
+        test.fail(result.getThrowable());
+        ExtentManager.removeTest();
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        methodLevelTest.get().skip("Test Skipped: " + result.getThrowable());
-        methodLevelTest.remove();
+        ExtentTest test = ExtentManager.getTest();
+        test.skip("Test Skipped: " + result.getThrowable());
+        ExtentManager.removeTest();
     }
 
     @Override
@@ -96,6 +90,17 @@ public class ExtentLogAttachListeners implements ITestListener {
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
                         + testLogs + "</pre></div>";
         test.info(styledLogs);
+    }
+    private void attachScreenshot(ExtentTest test)
+    {
+        WebDriver driver = DriverManager.getDriver();
+        if (driver != null) {
+            String base64Screenshot = getBase64Screenshot(driver);
+            //test.log(Status.INFO,stepName, MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
+            test.addScreenCaptureFromBase64String(base64Screenshot);
+        }else {
+            System.err.println("Driver is null. failed to attached screenshot");
+        }
     }
 
 }

@@ -6,6 +6,7 @@ import com.aventstack.extentreports.Status;
 import managers.DriverManager;
 import managers.ExtentManager;
 import managers.RecorderManager; // 💡 Re-import and use the thread-safe manager
+import org.apache.logging.log4j.ThreadContext;
 import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -17,69 +18,59 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 import static core.video.GetVideoFilePath.toGetVideoFilePath;
-
-// Assuming RecorderManager has thread-safe wrappers for start/stop
-// If you must use static imports, ensure they wrap the RecorderManager logic.
-// import static core.video.TestRecorder.startRecord;
-// import static com.project.utils.TestExecutionRecoder.stopRecord;
-
 public class ExtentVideoAttachListeners implements ITestListener {
-
     private static final ExtentReports extent = ExtentManager.getReportInstance();
-    private static final Map<String, ExtentTest> classNodeMap = new ConcurrentHashMap<>();
-    private static final ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
-
     @Override
     public void onTestStart(ITestResult result) {
-        String methodName = result.getMethod().getMethodName();
         String className = result.getTestClass().getRealClass().getSimpleName();
-        ExtentTest test;
-        // --- 1. EXTENT REPORT: Create Hierarchy Nodes ---
-        ExtentTest classTest = classNodeMap.computeIfAbsent(className, extent::createTest);
-        test = classTest.createNode(methodName);
-        methodLevelTest.set(test);
-        // Add optional info
+        ExtentTest classNode = ExtentManager.getOrCreateClassNode(className);
+
+        String methodName = result.getMethod().getMethodName();
+        ExtentTest methodNode = classNode.createNode(methodName);
+        ExtentManager.setTest(methodNode);
+        //-------------------//
+        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
+        ThreadContext.put("driverId", currentInstanceID);
+        //------------------//
         Object[] params = result.getParameters();
         if (params.length > 0) {
-            test.info("Parameters: " + Arrays.toString(params));
+            methodNode.info("Parameters: " + Arrays.toString(params));
         }
         Object[] groups = result.getMethod().getGroups();
         if (groups.length > 0) {
-            test.info("groups: " + Arrays.toString(groups));
+            methodNode.info("groups: " + Arrays.toString(groups));
         }
         try {
             // 💡 Call the thread-safe manager's method
             RecorderManager.initializeRecorder(methodName);
             RecorderManager.getRecorder().start(); // Assuming startRecording is on the instance
         } catch (Exception e) {
-            test.log(Status.WARNING, "Video recording failed to start: " + e.getMessage());
-            // Do NOT throw RuntimeException here. Let the test proceed.
+            System.err.println("Video recording failed to start: "+methodName);
         }
     }
     @Override
     public void onTestSuccess(ITestResult result) {
-        ExtentTest test = methodLevelTest.get();
+        ExtentTest test = ExtentManager.getTest();
         stopAndAttachVideo(test, result);
-        attachScreenshot(test);
-        test.pass("Test Passed");
-        methodLevelTest.remove(); // ThreadLocal cleanup
+        /* attachScreenshot(test,driver);*/
+        ExtentManager.removeTest();
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
-        ExtentTest test = methodLevelTest.get();
+        ExtentTest test = ExtentManager.getTest();
         stopAndAttachVideo(test, result);
         attachScreenshot(test);
         test.fail(result.getThrowable());
-        methodLevelTest.remove(); // ThreadLocal cleanup
+        ExtentManager.removeTest();
     }
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        ExtentTest test = methodLevelTest.get();
+        ExtentTest test = ExtentManager.getTest();
         stopAndAttachVideo(test, result);
         test.skip("Test Skipped: " + result.getThrowable());
-        methodLevelTest.remove(); // ThreadLocal cleanup
+        ExtentManager.removeTest();
     }
 
     @Override
@@ -93,9 +84,7 @@ public class ExtentVideoAttachListeners implements ITestListener {
     private void stopAndAttachVideo(ExtentTest test, ITestResult result) {
         try {
             String methodName =result.getMethod().getMethodName();
-            // 💡 Call the thread-safe manager's stop method
             RecorderManager.getRecorder().stop();
-            // Assuming toGetVideoFilePath retrieves the HTML link with the video path
             String videoLinkHtml = toGetVideoFilePath(result.getMethod().getMethodName());
             if (videoLinkHtml != null) {
                 test.info(videoLinkHtml +" :- " +methodName);
@@ -113,11 +102,15 @@ public class ExtentVideoAttachListeners implements ITestListener {
         }
     }
 
-    private void attachScreenshot(ExtentTest test) {
+    private void attachScreenshot(ExtentTest test)
+    {
         WebDriver driver = DriverManager.getDriver();
         if (driver != null) {
             String base64Screenshot = getBase64Screenshot(driver);
+            //test.log(Status.INFO,stepName, MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
             test.addScreenCaptureFromBase64String(base64Screenshot);
+        }else {
+            System.err.println("Driver is null. failed to attached screenshot");
         }
     }
 }

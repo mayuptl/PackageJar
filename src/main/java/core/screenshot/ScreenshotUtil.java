@@ -1,8 +1,11 @@
 package core.screenshot;
 
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
+import com.aventstack.extentreports.Status;
 import managers.DriverManager;
 import managers.ExtentManager;
-import org.apache.logging.log4j.core.util.internal.Status;
+
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -13,46 +16,34 @@ public class ScreenshotUtil
         return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
     }
     /**
-     * Takes a screenshot using the current thread-local driver, logs a step (PASS),
+     * Takes a step screenshot using the current thread-local driver, logs a step
      * and attaches the image to the Extent Report.
      * This method is STATIC for easy access from any test or POM class.
      *
-     * @param stepName The descriptive name for the test step and screenshot log entry.
+     * @param stepName The descriptive name for the test step.
      */
-    public static void stepScreenshot(String stepName) {
-        //WebDriver driver=DriverManager.getDriver();
-        String base64Image = getBase64Screenshot1();
-        // Pass the Base64 string to the Extent Manager for attachment
-        // ExtentManager knows the current test node via ThreadLocal, which is set by the Listener.
-        ExtentManager.attachScreenshotToReport(base64Image, stepName);
-    }
-    /**
-     * Captures the current browser viewport as a Base64 encoded string.
-     * This method is public static, allowing tests to get the raw image data if needed
-     * for custom logging or file storage, or it is used internally by stepScreenshot().
-     *
-     * @return The screenshot as a Base64 encoded String, or an empty string on failure.
-     */
-    public static String getBase64Screenshot1()
+    public static void stepss(String stepName)
     {
-        WebDriver driver = DriverManager.getDriver();
-        try
+       WebDriver driver = DriverManager.getDriver();
+       ExtentTest test = ExtentManager.getTest();
+       if(test == null)
+       {
+           System.err.println("ExtentTest is null. Did you call stepss() before onTestStart?");
+           return;
+       }
+        if(driver != null)
         {
-            if (driver instanceof TakesScreenshot)
+            try
             {
-                return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
-            } else
-            {
-                return "";
+                String base64Image = getBase64Screenshot(driver);
+                test.log(Status.INFO, stepName, MediaEntityBuilder.createScreenCaptureFromBase64String(base64Image).build());
+            } catch (Exception e) {
+                test.log(Status.INFO, stepName + " (Screenshot failed: " + e.getMessage() + ")");
+                System.err.println("Failed to take step screenshot for: " + stepName + ". Error: " + e.getMessage());
             }
-        } catch (Exception e)
-        {
-            // Log the error to the report if a test is running (This logic remains crucial)
-            if (ExtentManager.getTest() != null) {
-                System.err.println("failed to attached screenshot");
-               // ExtentManager.getTest().info(Status.ERROR, "Failed to capture screenshot: " + e.getMessage());
-            }
+        } else {
+            test.log(Status.INFO, stepName + " (No WebDriver instance available for screenshot)");
+            System.err.println("Failed to take step screenshot (No driver): " + stepName);
         }
-        return "";
     }
 }
