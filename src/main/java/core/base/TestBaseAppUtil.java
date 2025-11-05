@@ -27,7 +27,7 @@ import java.util.Map;
 public class TestBaseAppUtil {
     public WebDriver driver;
 
-    @BeforeClass
+   // @BeforeClass
     public void lunchAppUtil()
     {
         String CUSTOM_OPTIONS = "ARG:--force-device-scale-factor=0.8,ARG:--start-maximized,ARG:--incognito,ARG:--disable-infobars,ARG:--enable-logging=stderr,PREF:download.default_directory=/execution-output/test-downloads/,CAP:acceptInsecureCerts=true";
@@ -43,7 +43,7 @@ public class TestBaseAppUtil {
      * Quits the current WebDriver instance and removes it from the ThreadLocal storage
      * via a single call to the DriverManager utility.
      */
-    @AfterClass
+  //  @AfterClass
     public void tearDownAppUtil() {
         DriverManager.quitDriver();
     }
