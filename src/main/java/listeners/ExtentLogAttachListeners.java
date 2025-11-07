@@ -25,14 +25,9 @@ public class ExtentLogAttachListeners implements ITestListener {
     public void onTestStart(ITestResult result) {
         String className = result.getTestClass().getRealClass().getSimpleName();
         ExtentTest classNode = ExtentManager.getOrCreateClassNode(className);
-
         String methodName = result.getMethod().getMethodName();
         ExtentTest methodNode = classNode.createNode(methodName);
         ExtentManager.setTest(methodNode);
-        //-------------------//
-        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
-        ThreadContext.put("driverId", currentInstanceID);
-        //------------------//
         Object[] params = result.getParameters();
         if (params.length > 0) {
             methodNode.info("Parameters: " + Arrays.toString(params));
@@ -46,23 +41,18 @@ public class ExtentLogAttachListeners implements ITestListener {
     @Override
     public void onTestSuccess(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        /*attachScreenshot(test;*/
-        String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
-        attachLogs(test,safeDriverID,methodName);
-
+        /*attachScreenshot(test;*/
+        attachLogs(test,methodName);
         ExtentManager.removeTest();
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        attachScreenshot(test);
-
-        String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
-        attachLogs(test,safeDriverID,methodName);
-
+        attachScreenshot(test);
+        attachLogs(test,methodName);
         test.fail(result.getThrowable());
         ExtentManager.removeTest();
     }
@@ -80,11 +70,11 @@ public class ExtentLogAttachListeners implements ITestListener {
     }
 
     private String getDriverIdFromContext() {
-        // Retrieves the value safely bound to the current thread
         return ThreadContext.get("driverId");
     }
-    private void attachLogs(ExtentTest test,String driverID,String methodName)
+    private void attachLogs(ExtentTest test,String methodName)
     {
+        String driverID = getDriverIdFromContext();
         String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
         String styledLogs=
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"

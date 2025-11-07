@@ -28,10 +28,7 @@ public class ExtentVideoAttachListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         ExtentTest methodNode = classNode.createNode(methodName);
         ExtentManager.setTest(methodNode);
-        //-------------------//
-        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
-        ThreadContext.put("driverId", currentInstanceID);
-        //------------------//
+
         Object[] params = result.getParameters();
         if (params.length > 0) {
             methodNode.info("Parameters: " + Arrays.toString(params));
@@ -51,7 +48,8 @@ public class ExtentVideoAttachListeners implements ITestListener {
     @Override
     public void onTestSuccess(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
+        String methodName = result.getMethod().getMethodName();
+        stopAndAttachVideo(test, methodName);
         /* attachScreenshot(test,driver);*/
         ExtentManager.removeTest();
     }
@@ -59,7 +57,8 @@ public class ExtentVideoAttachListeners implements ITestListener {
     @Override
     public void onTestFailure(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
+        String methodName = result.getMethod().getMethodName();
+        stopAndAttachVideo(test, methodName);
         attachScreenshot(test);
         test.fail(result.getThrowable());
         ExtentManager.removeTest();
@@ -68,7 +67,8 @@ public class ExtentVideoAttachListeners implements ITestListener {
     @Override
     public void onTestSkipped(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
+        String methodName = result.getMethod().getMethodName();
+        stopAndAttachVideo(test, methodName);
         test.skip("Test Skipped: " + result.getThrowable());
         ExtentManager.removeTest();
     }
@@ -81,23 +81,20 @@ public class ExtentVideoAttachListeners implements ITestListener {
     // --- Helper Methods ---
 
     /** Stops the recorder, attaches the video link to the report, and cleans up Recorder ThreadLocal. */
-    private void stopAndAttachVideo(ExtentTest test, ITestResult result) {
+    private void stopAndAttachVideo(ExtentTest test, String methodName) {
         try {
-            String methodName =result.getMethod().getMethodName();
             RecorderManager.getRecorder().stop();
-            String videoLinkHtml = toGetVideoFilePath(result.getMethod().getMethodName());
+            String videoLinkHtml = toGetVideoFilePath(methodName);
             if (videoLinkHtml != null) {
-                test.info(videoLinkHtml +" :- " +methodName);
+                test.info(videoLinkHtml +" : " +methodName);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }
         } catch (IllegalStateException e) {
-            // Catches the error if RecorderManager.getRecorder() fails (e.g., if recording never started)
             test.log(Status.WARNING, "Video recorder was not running for this test.");
         } catch (Exception e) {
             test.log(Status.WARNING, "Failed to stop or attach video: " + e.getMessage());
         } finally {
-            // 💡 CRITICAL FIX: Clean up Recorder ThreadLocal, always runs
             RecorderManager.removeInstance();
         }
     }

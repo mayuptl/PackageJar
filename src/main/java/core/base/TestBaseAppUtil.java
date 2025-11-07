@@ -2,6 +2,7 @@ package core.base;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import managers.DriverManager;
+import org.apache.logging.log4j.ThreadContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -46,6 +47,7 @@ public class TestBaseAppUtil {
   //  @AfterClass
     public void tearDownAppUtil() {
         DriverManager.quitDriver();
+        ThreadContext.clearAll();
     }
     /**
      * Public method to initialize the driver with user define browser.
@@ -210,6 +212,7 @@ public class TestBaseAppUtil {
                     ". Supported browsers are: edge, chrome, firefox, safari, edge headless, chrome headless, firefox headless");
         }
         DriverManager.setDriver(driver);
+        ThreadContext.put("driverId",String.valueOf(System.identityHashCode(DriverManager.getDriver())));
         return driver;
     }
     /**

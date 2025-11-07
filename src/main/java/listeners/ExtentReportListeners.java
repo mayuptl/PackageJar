@@ -28,10 +28,7 @@ public class ExtentReportListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         ExtentTest methodNode = classNode.createNode(methodName);
         ExtentManager.setTest(methodNode);
-        //-------------------//
-        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
-        ThreadContext.put("driverId", currentInstanceID);
-        //------------------//
+
         Object[] params = result.getParameters();
         if (params.length > 0) {
             methodNode.info("Parameters: " + Arrays.toString(params));

@@ -25,7 +25,6 @@ import static core.video.GetVideoFilePath.toGetVideoFilePath;
 public class ExtentVideoLogAttachListeners implements ITestListener {
 
     private static final ExtentReports extent = ExtentManager.getReportInstance();
-    private static final ThreadLocal<ExtentTest> methodLevelTest = new ThreadLocal<>();
     @Override
     public void onTestStart(ITestResult result) {
         String className = result.getTestClass().getRealClass().getSimpleName();
@@ -34,10 +33,7 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         ExtentTest methodNode = classNode.createNode(methodName);
         ExtentManager.setTest(methodNode);
-        //-------------------//
-        String currentInstanceID = String.valueOf(System.identityHashCode(DriverManager.getDriver()));
-        ThreadContext.put("driverId", currentInstanceID);
-        //------------------//
+
         Object[] params = result.getParameters();
         if (params.length > 0) {
             methodNode.info("Parameters: " + Arrays.toString(params));
@@ -56,25 +52,20 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
     @Override
     public void onTestSuccess(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
-        /* attachScreenshot(test,driver);*/
-        String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
-        attachLogs(test,safeDriverID,methodName);
-
+        stopAndAttachVideo(test, methodName);
+        /* attachScreenshot(test,driver);*/
+        attachLogs(test,methodName);
         ExtentManager.removeTest();
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
-        attachScreenshot(test);
-
-        String safeDriverID = getDriverIdFromContext();
         String methodName = result.getMethod().getMethodName();
-        attachLogs(test,safeDriverID,methodName);
-
+        stopAndAttachVideo(test, methodName);
+        attachScreenshot(test);
+        attachLogs(test,methodName);
         test.fail(result.getThrowable());
         ExtentManager.removeTest(); // ThreadLocal cleanup
     }
@@ -82,7 +73,8 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
     @Override
     public void onTestSkipped(ITestResult result) {
         ExtentTest test = ExtentManager.getTest();
-        stopAndAttachVideo(test, result);
+        String methodName = result.getMethod().getMethodName();
+        stopAndAttachVideo(test, methodName);
         test.skip("Test Skipped: " + result.getThrowable());
         ExtentManager.removeTest();
     }
@@ -95,8 +87,9 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
     private String getDriverIdFromContext() {
         return ThreadContext.get("driverId");
     }
-    private void attachLogs(ExtentTest test,String driverID,String methodName)
+    private void attachLogs(ExtentTest test,String methodName)
     {
+        String driverID = getDriverIdFromContext();
         String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
         String styledLogs=
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
@@ -104,13 +97,12 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         test.info(styledLogs);
     }
     /** Stops the recorder, attaches the video link to the report, and cleans up Recorder ThreadLocal. */
-    private void stopAndAttachVideo(ExtentTest test, ITestResult result) {
+    private void stopAndAttachVideo(ExtentTest test, String methodName) {
         try {
-            String methodName =result.getMethod().getMethodName();
             RecorderManager.getRecorder().stop();
             String videoLinkHtml = toGetVideoFilePath(methodName);
             if (videoLinkHtml != null) {
-                test.info(videoLinkHtml +" :- " +methodName);
+                test.info(videoLinkHtml +" : " +methodName);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }
