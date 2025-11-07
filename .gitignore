@@ -2,3 +2,5 @@
 .mvn/
 target/
 !target/**/*.jar
+execution-output/test-recordings/
+executionLogs/
