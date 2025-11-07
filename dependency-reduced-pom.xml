@@ -4,7 +4,7 @@
   <groupId>org.example</groupId>
   <artifactId>app-utils</artifactId>
   <name>app-utils</name>
-  <version>3.5.3-SNAPSHOT</version>
+  <version>3.5.4-SNAPSHOT</version>
   <url>http://www.example.com</url>
   <build>
     <plugins>
@@ -124,7 +124,7 @@
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
-      <version>4.37.0</version>
+      <version>4.38.0</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
