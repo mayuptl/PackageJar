@@ -1,6 +1,6 @@
 .idea/
 .mvn/
-target/
+target/**
 !target/**/*.jar
 execution-output/test-recordings/
 executionLogs/
