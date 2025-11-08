@@ -4,7 +4,7 @@
   <groupId>org.example</groupId>
   <artifactId>app-utils</artifactId>
   <name>app-utils</name>
-  <version>3.5.4-SNAPSHOT</version>
+  <version>3.5.6-SNAPSHOT</version>
   <url>http://www.example.com</url>
   <build>
     <plugins>
@@ -101,10 +101,27 @@
         </configuration>
       </plugin>
       <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <docfilessubdirs>true</docfilessubdirs>
+          <failOnError>false</failOnError>
+          <doclint>none</doclint>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.13.0</version>
         <configuration>
-          <release>16</release>
+          <release>${java.target.version}</release>
         </configuration>
       </plugin>
       <plugin>
@@ -155,7 +172,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.target.version>17</java.target.version>
   </properties>
 </project>

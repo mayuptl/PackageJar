@@ -27,8 +27,18 @@ import java.util.Map;
  * This class provides methods to launch the application using different configurations.
  */
 public class TestBaseAppUtil {
+    /**
+     * The WebDriver instance for the current test thread.
+     * This field is often synchronized with the driver managed by {@code DriverManager}.
+     */
     public WebDriver driver;
 
+    /**
+     * Initializes the WebDriver, sets implicit waits, and navigates to the starting URL.
+     * <p>
+     * NOTE: This method currently uses hardcoded initialization parameters for demonstration/local testing.
+     * For production test suites, configuration should be loaded dynamically (e.g., from properties).
+     */
    // @BeforeClass
     public void lunchAppUtil()
     {
@@ -101,6 +111,7 @@ public class TestBaseAppUtil {
      * @param driverPath The manual path to the driver executable.
      * @param customOptions Comma-separated string of custom options ("ARG:...,ARG:...,PREF:...,PREF:...,CAP:...,CAP:...")
      * @return The initialized WebDriver instance.
+     * @throws IllegalArgumentException If the specified browser name is not supported (e.g., "opera").
      */
     private WebDriver initDriverCore(String BrowserName, String driverPath, String customOptions) {
         WebDriver driver;
@@ -234,8 +245,16 @@ public class TestBaseAppUtil {
         return driver;
     }
     /**
-     * Helper method to apply command-line arguments and capabilities to the browser options.
-     * This method assumes the options object has a compatible method (like addArguments/setCapability).
+     * Helper method to apply command-line arguments (ARG:) and general capabilities (CAP:)
+     * to the browser options object.
+     *
+     * <p>This method dynamically calls {@code addArguments} or {@code setCapability}
+     * based on the concrete implementation of the {@code MutableCapabilities} instance
+     * (e.g., {@code ChromeOptions}, {@code FirefoxOptions}).</p>
+     *
+     * @param options The MutableCapabilities instance (e.g., ChromeOptions) to which settings are applied.
+     * @param customOptions The full custom options string used to extract command-line arguments.
+     * @param caps A map of capabilities parsed from the custom options string (CAP:...).
      */
     private void applyOptions(MutableCapabilities options, String customOptions, Map<String, Object> caps)
     {
