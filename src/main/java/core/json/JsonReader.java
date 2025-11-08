@@ -10,48 +10,44 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
-
+/**
+ * Utility class for reading test data from JSON files.
+ * This class provides methods to retrieve either a single data entry based on a test case ID
+ * or a complete list of data entries from a JSON array.
+ * 1 getJsonInput : useful in to get input as per given testCaseName
+ * 2 getJsonInputs : useful in to execute the same test case with multiple different inputs.
+ * It uses Jackson Databind for mapping JSON content to Java collections.
+ */
 public class JsonReader {
     /**
-     * This class contains two methods.
-     * 1 getJsonInput : useful in get input as per given testCaseName
-     * 2 getJsonInputs : useful in to execute the same test case with multiple different inputs.
-    */
-    private final String TCID_KEY = "testCaseName";
+     * Key used in the JSON data objects to identify the test case name/ID.
+     * This key is mandatory for the {@code getJsonInput} method to work correctly.
+     */
+    private static final String TCID_KEY = "testCaseName";
     /**
-     * <p>1 getJsonInput : useful in get input as per given testCaseName</p>
-     * Useful in get input as per given testCaseName from json file.
-     * @param jsonFilePath The full path to the JSON data file.
-     * @param testCaseName The value to search for (e.g., "TC_001_Login").
-     * @return A {@code Object[][]} containing the test case's input data.
-     * * <h4>Example Usage in a TestNG DataProvider (Single Test Case):</h4>
-     * <p>This example demonstrates how to use this method to run a TestNG test method
-     * only once, using the data for a specific TCID.</p>
-     * <pre>{@code
-     * JsonReader jsonReader = new JsonReader();
-     * @DataProvider(name = "getJsonData")
-     * public Object[] getJsonData()
-     * {
-     *     return jsonReader.getJsonInput("path/to/data.json", "TC_001_Login");
-     * }
-     * }</pre>
-     * * <p>The JSON file must contain an array of objects, similar to the following structure:</p>
+     * Retrieves the input data for a specific test case ID from a JSON array file.
+     * <p>The method searches for an object where the key defined by {@code TCID_KEY}
+     * matches the {@code testCaseName} provided.</p>
+     *
+     * @param jsonFilePath The full path to the JSON data file. The JSON must be an array of objects.
+     * @param testCaseName The unique ID/Name of the test case to look for (e.g., "TC_001_Login").
+     * @return A {@code Object[][]} containing the single matching data HashMap,
+     * formatted for direct use in TestNG's DataProvider (i.e., {@code Object[1][1]}).
+     * @throws RuntimeException if the file is not found, cannot be read, the JSON is invalid,
+     * or the specified testCaseName is not found in the data.
+     *
+     * <h4>Example JSON Structure (Required for this method):</h4>
      * <pre>{@code
      * [
-     *      {
-     *          "testCaseName": "TC_001_Login",
-     *          "username": "adminUser",
-     *          "password": "securePassword123"
-     *      },
-     *      {
-     *          "testCaseName": "TC_002_Invalid_Password",
-     *          "username": "adminUser",
-     *          "password": "wrongPassword"
-     *      }
+     * {
+     * "testCaseName": "TC_001_Login",
+     * "username": "adminUser",
+     * "password": "securePassword123"
+     * },
+     * // ... other test cases ...
      * ]
      * }</pre>
      */
-
     public Object[][] getJsonInput(String jsonFilePath, String testCaseName) {
         String jsonCont;
         try {
@@ -95,11 +91,16 @@ public class JsonReader {
 
     /**
      * 2 getJsonInputs : useful in to execute the same test case with multiple different inputs.
-     * Reads all data from a JSON file (containing an array of objects) and maps it.
-     * This is typically used to execute the same test case with multiple different inputs.
-     * @param jsonFilePath The full path to the JSON data file.
-     * @return A List of HashMaps, where each HashMap represents one test case (data row).
-     * @throws RuntimeException if the file is not found, cannot be read, or the JSON is invalid.
+     * Reads all objects from a JSON array file and returns them as a List of HashMaps.
+     * This method is useful for DataProviders that need to iterate through all rows
+     * or a subset of rows in the JSON file.
+     *
+     * @param jsonFilePath The full path to the JSON data file. The JSON must be an array of objects.
+     * @return A {@code List} of {@code HashMap<String, String>}, where each HashMap represents
+     * one test data entry (data row).
+     * @throws IOException if the JSON content is invalid or a file reading error occurs.
+     * @throws RuntimeException if the file is not found or cannot be read.
+     *
      * * <h4>Example Usage in a TestNG DataProvider:</h4>
      * <p>The DataProvider must wrap the returned List elements into an {@code Object[]} array.</p>
      * <pre>{@code
