@@ -10,11 +10,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
-
+/**
+ * Utility class for reading test data from Excel (.xlsx) files using Apache POI.
+ * This class is designed to retrieve data based on a unique test case identifier found
+ * in the first column of the specified sheet.
+ */
 public class ExcelReader {
     /**
      * Reads a specific row of test data from an Excel file based on the unique
      * test case identifier found in the first column (index 0) of the sheet.
+     *
      * @param excelFilePath The full path to the Excel (.xlsx) file.
      * @param sheetName     The name of the sheet containing the test data.
      * @param testCaseName  The unique ID/Name of the test case to look for in column A.
@@ -156,7 +161,15 @@ public class ExcelReader {
         Row row = validateTestCaseExists(sheet, testCaseName);
         return extractRowData(row);
     }
-
+    /**
+     * Iterates through the sheet to find the row matching the test case name in column 0.
+     * Throws an exception if the test case is not found or has no associated data.
+     *
+     * @param sheet The Excel sheet to search in.
+     * @param testCaseName The unique test case ID/Name to look for.
+     * @return The {@link Row} object corresponding to the test case.
+     * @throws NoSuchElementException If the test case is not found or is found but contains no data.
+     */
     private Row validateTestCaseExists(Sheet sheet, String testCaseName) {
         boolean flag = false; // used for test case name check
         int cellCount = 0;
@@ -184,7 +197,13 @@ public class ExcelReader {
         }
         return null;
     }
-
+    /**
+     * Extracts all cell data from the given row, starting from the second column (index 1),
+     * and converts it to a List of Strings, handling different cell types appropriately.
+     *
+     * @param row The Excel {@link Row} to process.
+     * @return A {@link List} of {@link String} containing the formatted cell values.
+     */
     private List<String> extractRowData(Row row) {
         List<String> inputDataList = new ArrayList<>();
         int cellCount = row.getLastCellNum();
@@ -233,6 +252,10 @@ public class ExcelReader {
                     }
                 } // end of (row.getCell(i).getColumnIndex() != 0) // it will ignore 1st column (i.e A column)
             } // end of if (row.getCell(i) != null)
+            else{
+                // Handle null/undefined cells by adding an empty string
+                inputDataList.add("");
+            }
         } // end of for loop for (int i = 0; i <= cellCount; i++)
         return inputDataList;
     }
