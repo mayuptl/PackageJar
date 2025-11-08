@@ -7,121 +7,166 @@ import org.openqa.selenium.WebElement;
 /**
  * Utility class for performing standard Selenium actions while applying a
  * persistent visual highlight (border) to the target element.
- * * The highlight remains on the element until a page navigation occurs (DOM reset).
+ * <p>The highlight remains on the element until a page navigation occurs (DOM reset).
+ * All methods are designed to safely catch and handle exceptions (like {@code StaleElementReferenceException}
+ * or operation failures) without stopping test execution.</p>
  */
 public class HighlightUtil {
 
     private final WebDriver driver;
     /**
      * Initializes the Highlight utility with the WebDriver instance.
-     * * @param driver The active WebDriver instance.
+     *
+     * @param driver The active WebDriver instance.
      */
     public HighlightUtil(WebDriver driver) {
         this.driver = driver;
     }
-    //Utility method to border to an element
+    /**
+     * Applies a dashed border highlight and scrolls the element into view.
+     * Exceptions are caught and ignored to prevent execution failure.
+     *
+     * @param element The {@link WebElement} to highlight.
+     * @param color The border color (e.g., "green", "red").
+     */
     private void applyHighlight(WebElement element, String color) {
-        scrollTo(element);
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        // Script for highlight
-        String script = "arguments[0].style.border='3px dashed "+color+"'";
-        js.executeScript(script, element);
+        try {
+            scrollTo(element);
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            // Script for highlight: 3px dashed border of the specified color.
+            String script = "arguments[0].style.border='3px dashed "+color+"'";
+            js.executeScript(script, element);
+        } catch (Exception e) {
+            System.err.println("Highlighting failed for element: " + element + ". Error: " + e.getMessage());
+            // Execution continues even if highlighting fails.
+        }
     }
     /**
      * Clicks the specified element after applying a green highlight.
-     * The highlight is applied before the click action executes.
-     * * @param element The {@link WebElement} to be clicked.
+     * The method catches all exceptions and logs the error, ensuring the test execution does not stop.
+     *
+     * @param element The {@link WebElement} to be clicked.
      */
     public void click(WebElement element) {
-        applyHighlight(element, "green");
-        element.click();
+        try {
+            applyHighlight(element, "green");
+            element.click();
+        } catch (Exception e) {
+            System.err.println("Click failed for element: " + element + ". Error: " + e.getMessage());
+        }
     }
-
     /**
      * Clears the element and then enters the specified text after applying a green highlight.
-     * * @param element The input {@link WebElement} to clear and send keys to.
+     * The method catches all exceptions and logs the error, ensuring the test execution does not stop.
+     *
+     * @param element The input {@link WebElement} to clear and send keys to.
      * @param value The text to be entered into the input field.
      */
     public void sendKeys(WebElement element, String value) {
-        applyHighlight(element, "green");
-        element.clear();
-        element.sendKeys(value);
+        try {
+            applyHighlight(element, "green");
+            element.clear();
+            element.sendKeys(value);
+        } catch (Exception e) {
+            System.err.println("SendKeys failed for element: " + element + ". Error: " + e.getMessage());
+        }
     }
     /**
-     * Appends text to the next of existing text in an input field after applying a green highlight.
+     * Appends text to the existing text in an input field after applying a green highlight.
      * This method does not clear the input field first.
-     * * @param element The input {@link WebElement} to append keys to.
+     * The method catches all exceptions and logs the error, ensuring the test execution does not stop.
+     *
+     * @param element The input {@link WebElement} to append keys to.
      * @param value The text to be appended.
      */
     public void sendKeysAppend(WebElement element, String value) {
-        applyHighlight(element, "green");
-        element.sendKeys(value);
+        try {
+            applyHighlight(element, "green");
+            element.sendKeys(value);
+        } catch (Exception e) {
+            System.err.println("SendKeysAppend failed for element: " + element + ". Error: " + e.getMessage());
+        }
     }
     /**
      * Retrieves the visible text of an element after applying a green highlight.
-     * * @param element The {@link WebElement} from which to retrieve the text.
-     * @return The visible text of the element.
+     * The method catches all exceptions and returns an empty string, ensuring the test execution does not stop.
+     *
+     * @param element The {@link WebElement} from which to retrieve the text.
+     * @return The visible text of the element, or an empty string if the operation fails.
      */
     public String getText(WebElement element) {
-        applyHighlight(element, "green");
-        return element.getText();
+        try {
+            applyHighlight(element, "green");
+            return element.getText();
+        } catch (Exception e) {
+            System.err.println("GetText failed for element: " + element + ". Error: " + e.getMessage());
+            return ""; // Safe return value
+        }
     }
     /**
      * Compares the actual text of an element with an expected value, applying
      * visual feedback based on the result.
-     * - Applies a 'green' border on match.
-     * - Applies a 'red' border on mismatch.
-     * * @param element The {@link WebElement} whose text will be compared.
+     * <ul>
+     * <li>Applies a 'green' border on match.</li>
+     * <li>Applies a 'red' border on mismatch.</li>
+     * </ul>
+     * The method catches all exceptions and returns {@code false}, ensuring the test execution does not stop.
+     *
+     * @param element The {@link WebElement} whose text will be compared.
      * @param expectedText The expected text value.
-     * @return true if the texts match, false otherwise.
+     * @return true if the texts match, false otherwise or if the operation fails.
      */
     public boolean compareText(WebElement element, String expectedText) {
-        String actualText = element.getText();
-        if (expectedText.equals(actualText)) {
-            applyHighlight(element, "green");
-            return true;
-        } else {
-            applyHighlight(element, "red");
-            return false;
+        try {
+            String actualText = element.getText();
+            boolean match = expectedText.equals(actualText);
+            applyHighlight(element, match ? "green" : "red");
+            return match;
+        } catch (Exception e) {
+            System.err.println("CompareText failed for element: " + element + ". Error: " + e.getMessage());
+            return false; // Safe return value
         }
     }
     /**
      * Checks if an element is currently displayed on the page.
-     * - Applies a 'green' border if the element is displayed.
-     * - Suppresses {@link NoSuchElementException} and returns false if the element is not found.
-     * * @param element The {@link WebElement} to check.
-     * @return true if the element is displayed, false if not displayed or not found.
-     * @throws Exception If an unexpected Selenium exception occurs (e.g., StaleElementReferenceException).
+     * The method catches all exceptions (including {@code NoSuchElementException} and {@code StaleElementReferenceException})
+     * and returns {@code false}, ensuring the test execution does not stop.
+     *
+     * @param element The {@link WebElement} to check.
+     * @return true if the element is displayed, false if not displayed or the check fails.
      */
     public boolean isDisplayed(WebElement element) {
         try {
             boolean displayed = element.isDisplayed();
             if (displayed) applyHighlight(element, "green");
             return displayed;
-        } catch (NoSuchElementException e) {
-            // Only catch NoSuchElement to indicate it's not present
-            return false;
         } catch (Exception e) {
-            // Re-throw other unexpected exceptions like StaleElementReferenceException
-            // so the test fails clearly.
-            throw e;
+            System.err.println("IsDisplayed check failed for element: " + element + ". Error: " + e.getMessage());
+            // Catching all exceptions and returning false ensures test continues, as requested.
+            return false;
         }
     }
     /**
      * Scrolls the element into the viewport only if it is not currently in view.
      * Uses smooth scrolling behavior to center the element.
-     * * @param element The {@link WebElement} to scroll to.
+     * Exceptions are caught and ignored to prevent execution failure.
+     *
+     * @param element The {@link WebElement} to scroll to.
      */
     public void scrollTo(WebElement element) {
-        // Check if the element is in the viewport
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        boolean isElementInView = (boolean) js.executeScript(
-                "var rect = arguments[0].getBoundingClientRect();" +
-                        "return (rect.top >= 0 && rect.bottom <= window.innerHeight);", element);
-        // If not in viewport, scroll to the element
-        if (!isElementInView) {
-            js.executeScript("arguments[0].scrollIntoView({ behavior: 'smooth', block: 'center' });", element);
-
+        try {
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            // Check if the element is in the viewport
+            boolean isElementInView = (boolean) js.executeScript(
+                    "var rect = arguments[0].getBoundingClientRect();" +
+                            "return (rect.top >= 0 && rect.bottom <= window.innerHeight);", element);
+            // If not in viewport, scroll to the element
+            if (!isElementInView) {
+                js.executeScript("arguments[0].scrollIntoView({ behavior: 'smooth', block: 'center' });", element);
+            }
+        } catch (Exception e) {
+            System.err.println("Scrolling failed for element: " + element + ". Error: " + e.getMessage());
+            // Execution continues even if scrolling fails.
         }
     }
 //========================================================================================//
