@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" debug="false">
+<!--
+    The shutdownHook="disable" is added to prevent Log4j from delaying the JVM shutdown
+    and to allow the WebDriver processes to terminate cleanly, which is common in test automation.
+-->
+<Configuration status="WARN" debug="false" shutdownHook="disable">
     <!-- Changing status to WARN to suppress unnecessary Log4j internal output -->
-
     <Properties>
         <Property name="CONSOLE_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%X{driverId}] %highlight{[%p]}{ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue, TRACE=blue} %c{1} - %msg%n</Property>
         <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%X{driverId}] [%p] %c{1} - %msg%n</Property>
