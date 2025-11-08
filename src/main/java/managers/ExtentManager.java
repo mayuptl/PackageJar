@@ -90,17 +90,17 @@ public class ExtentManager {
     public static void removeTest() {
         currentTest.remove();
     }
+    //==========================================================//
     /**
      * Writes all buffered information to the physical report file.
      * This must be called once after all tests have completed.
      */
-    public static void flushReport() {
+   /* public static void flushReport() {
         if (extent != null) {
             extent.flush();
             System.out.println("Extent Report successfully generated.");
         }
-    }
-   //==========================================================//
+    }*/
     /**
      * Creates a new ExtentTest instance for a test method and stores it in the thread-local storage.
      *
