@@ -12,16 +12,22 @@ import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
-
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static core.config.ConfigReader.getBoolProp;
-import static core.config.ConfigReader.getStrProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 import static core.video.GetVideoFilePath.toGetVideoFilePath;
 
+// Assuming GetVideoFilePath.toGetVideoFilePath is available
+// import static core.video.GetVideoFilePath.toGetVideoFilePath;
+
+/**
+ * ExtentVideoLogAttachListeners is the comprehensive listener responsible for:
+ * 1. Managing Extent Reports (start, success, failure, skip, finish).
+ * 2. Starting and stopping video recording, and attaching the video link to the report.
+ * 3. Attaching logs retrieved via LogExtractorUtil to every test case (pass/fail).
+ * 4. Attaching a screenshot to the report only on test failure.
+ *
+ * It relies on TestBaseApputil for setting and clearing the ThreadContext (driverId, testName).
+ */
 public class ExtentVideoLogAttachListeners implements ITestListener {
 
     private static final ExtentReports extent = ExtentManager.getReportInstance();
@@ -125,4 +131,7 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
             System.err.println("Driver is null. failed to attached screenshot");
         }
     }
+    // Unused methods required by ITestListener interface
+    @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}
+    @Override public void onTestFailedWithTimeout(ITestResult result) {}
 }

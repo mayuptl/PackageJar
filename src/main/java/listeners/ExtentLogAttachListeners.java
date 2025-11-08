@@ -17,7 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static core.config.ConfigReader.getBoolProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
-
+/**
+ * ExtentLogAttachListeners is the comprehensive listener responsible for:
+ * 1. Managing Extent Reports (start, success, failure, skip, finish).
+ * 2. Attaching logs retrieved via LogExtractorUtil to every test case (pass/fail).
+ * 3. Attaching a screenshot to the report only on test failure.
+ * 4. Ensuring thread-safe reporting via ExtentManager and ThreadLocal.
+ */
 public class ExtentLogAttachListeners implements ITestListener {
     private static final ExtentReports extent = ExtentManager.getReportInstance();
 
@@ -68,10 +74,19 @@ public class ExtentLogAttachListeners implements ITestListener {
     public void onFinish(ITestContext context) {
         extent.flush();
     }
-
+    /**
+     * Retrieves the driver ID from the Log4j2 ThreadContext.
+     * @return The thread-specific driver ID.
+     */
     private String getDriverIdFromContext() {
         return ThreadContext.get("driverId");
     }
+    /**
+     * Extracts test case logs and attaches them to the Extent Report as formatted HTML.
+     * (NOTE: LogExtractorUtil.toGetTestCaseLogs() must be implemented elsewhere)
+     * @param test The current ExtentTest node.
+     * @param methodName The name of the currently executing test method.
+     */
     private void attachLogs(ExtentTest test,String methodName)
     {
         String driverID = getDriverIdFromContext();
@@ -81,6 +96,10 @@ public class ExtentLogAttachListeners implements ITestListener {
                         + testLogs + "</pre></div>";
         test.info(styledLogs);
     }
+    /**
+     * Captures a screenshot and adds it to the Extent Report test node.
+     * @param test The current ExtentTest node.
+     */
     private void attachScreenshot(ExtentTest test)
     {
         WebDriver driver = DriverManager.getDriver();
@@ -92,5 +111,7 @@ public class ExtentLogAttachListeners implements ITestListener {
             System.err.println("Driver is null. failed to attached screenshot");
         }
     }
-
+    // Unused methods required by ITestListener interface
+    @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}
+    @Override public void onTestFailedWithTimeout(ITestResult result) {}
 }

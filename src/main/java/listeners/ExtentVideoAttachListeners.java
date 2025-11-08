@@ -6,18 +6,23 @@ import com.aventstack.extentreports.Status;
 import managers.DriverManager;
 import managers.ExtentManager;
 import managers.RecorderManager; // 💡 Re-import and use the thread-safe manager
-import org.apache.logging.log4j.ThreadContext;
 import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 import static core.video.GetVideoFilePath.toGetVideoFilePath;
+/**
+ * ExtentVideoAttachListeners is a streamlined listener focusing only on:
+ * 1. Managing Extent Reports (start, success, failure, skip, finish).
+ * 2. Starting and stopping video recording, and attaching the video link to the report.
+ * 3. Attaching a screenshot to the report only on test failure.
+ *
+ * This listener relies on TestBaseAppUtil for setting and clearing the ThreadContext.
+ */
 public class ExtentVideoAttachListeners implements ITestListener {
     private static final ExtentReports extent = ExtentManager.getReportInstance();
     @Override
@@ -110,4 +115,7 @@ public class ExtentVideoAttachListeners implements ITestListener {
             System.err.println("Driver is null. failed to attached screenshot");
         }
     }
+    // Unused methods required by ITestListener interface
+    @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}
+    @Override public void onTestFailedWithTimeout(ITestResult result) {}
 }
