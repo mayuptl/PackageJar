@@ -12,7 +12,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
+        <!-- DEFINITIVE JAVA TARGET VERSION -->
+        <java.target.version>17</java.target.version>
         <!-- Removed redundant compiler source/target properties since we now use the <release> tag below -->
     </properties>
 
@@ -236,7 +237,7 @@
                 </configuration>
             </plugin>
             <!-- 2. Javadoc Plugin (Attaches Documentation) -->
-            <!--            <plugin>
+                      <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-javadoc-plugin</artifactId>
                             <version>3.6.3</version>
@@ -252,13 +253,14 @@
                                     </goals>
                                 </execution>
                             </executions>
-                        </plugin>-->
+                        </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>16</release>
+                    <!-- Compiling and targeting Java 17 LTS release standards -->
+                    <release>${java.target.version}</release>
                 </configuration>
             </plugin>
             <plugin>
