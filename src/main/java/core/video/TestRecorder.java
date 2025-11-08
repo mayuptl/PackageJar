@@ -1,5 +1,4 @@
 package core.video;
-// ... (all existing imports remain) ...
 import org.monte.media.Format;
 import org.monte.media.FormatKeys;
 import org.monte.media.Registry;
@@ -9,15 +8,25 @@ import org.monte.screenrecorder.ScreenRecorder;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
-
-import static core.config.ConfigReader.getStrProp;
 import static org.monte.media.FormatKeys.*;
 import static org.monte.media.VideoFormatKeys.*;
 
 public class TestRecorder extends ScreenRecorder {
     private final String name;
-    // Constructor remains mostly the same
+    /**
+     * Custom constructor to allow storing the test case name for dynamic file naming.
+     *
+     * @param cfg Graphics configuration of the screen.
+     * @param captureArea The area of the screen to capture (usually full screen).
+     * @param fileFormat The desired output file format (e.g., AVI).
+     * @param screenFormat The format for the video stream.
+     * @param mouseFormat The format for the mouse pointer visualization.
+     * @param audioFormat The format for the audio stream (null for no audio).
+     * @param movieFolder The directory where the video file will be saved.
+     * @param name The name of the test case, used as the video filename prefix.
+     * @throws IOException If an I/O error occurs.
+     * @throws AWTException If the platform configuration prevents low-level input control.
+     */
     public TestRecorder(GraphicsConfiguration cfg, Rectangle captureArea, Format fileFormat,
                         Format screenFormat, Format mouseFormat, Format audioFormat, File movieFolder, String name)
             throws IOException, AWTException {
@@ -37,7 +46,16 @@ public class TestRecorder extends ScreenRecorder {
                 name + "." + Registry.getInstance().getExtension(fileFormat));
     }
 
-    // 💡 NEW FACTORY METHOD: Creates and configures a new thread-safe recorder instance
+    /**
+     * Factory method to create and configure a new TestRecorder instance with standard settings
+     * for screen capture. It captures the entire screen.
+     *
+     * @param recordedVideoName The base name for the video file (usually the test method name).
+     * @param userPath          The directory where the video should be saved.
+     * @return A configured {@code TestRecorder} instance.
+     * @throws IOException If an I/O error occurs during file setup.
+     * @throws AWTException If the platform configuration prevents screen recording.
+     */
     public static TestRecorder createConfiguredRecorder(String recordedVideoName, String userPath)
             throws IOException, AWTException {
 
@@ -48,7 +66,7 @@ public class TestRecorder extends ScreenRecorder {
         GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice()
                 .getDefaultConfiguration();
-
+        // Standard Monte Recorder configuration for AVI video capture
         return new TestRecorder(
                 gc, captureSize,
                 new Format(MediaTypeKey, FormatKeys.MediaType.FILE, MimeTypeKey, MIME_AVI),

@@ -2,65 +2,91 @@ package core.video;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 import static core.config.ConfigReader.getStrProp;
-
+/**
+ * Utility class to locate the video recording file for a given test case and format
+ * the file path as an HTML anchor tag for inclusion in test reports.
+ * The default video file extension is set to ".avi".
+ */
 public class GetVideoFilePath {
-    //private static final String DEFAULT_VIDEO_FOLDER = getStrProp("DEFAULT_VIDEO_FOLDER");
-    //**NEW (Will safely default to `target/videos` if config file or key is missing):**
+    /**
+     * The default folder path where video recordings are expected to be stored.
+     * Safely defaults to {@code execution-output/test-recordings/} if the configuration key is missing.
+     */
     private static final String DEFAULT_VIDEO_FOLDER = getStrProp("TEST_RECORDINGS", "execution-output/test-recordings/");
-
+    private static final String DEFAULT_VIDEO_EXTENSION = ".avi";
+    /**
+     * Extracts the file path for the video recording of a test case using the default video folder
+     * and the default extension ({@value #DEFAULT_VIDEO_EXTENSION}).
+     *
+     * @param testCaseName The name of the test case (e.g., "loginTest").
+     * @return A {@code String} containing the HTML anchor tag link to the video file, or an error message string.
+     */
     public static String toGetVideoFilePath(String testCaseName)
     {
         // Calls the primary implementation with the default extension
         return toGetVideoFilePath(testCaseName,DEFAULT_VIDEO_FOLDER);
     }
 
-    // --- Overload 2: Handles TWO arguments (Uses the provided extension) ---
+    /**
+     * Extracts the file path for the video recording of a test case using a custom video folder.
+     *
+     * @param testCaseName The name of the test case (e.g., "loginTest").
+     * @param userPath     The custom directory path to search for the video file.
+     * @return A {@code String} containing the HTML anchor tag link to the video file, or an error message string.
+     */
     public static String toGetVideoFilePath(String testCaseName, String userPath) {
+        // Core logic will handle path checks and return an error if userPath is invalid or file not found.
         return toGetVideoFilePathCoreLogic(testCaseName, userPath);
     }
-    // This method will return execution video file path as hyperlink, so that we can attach this in report
+    /**
+     * Core logic to search for the video file and format its path as an HTML hyperlink.
+     * The expected filename is constructed as {@code testCaseName + DEFAULT_VIDEO_EXTENSION}.
+     *
+     * @param testCaseName The name of the test case.
+     * @param userPath The directory path to search in.
+     * @return The HTML anchor tag linking to the video file, or a descriptive error message.
+     */
     private static String toGetVideoFilePathCoreLogic(String testCaseName, String userPath)
     {
-        // Define the target filename
-        final String fullFileName = testCaseName + ".avi";
-        // Use a Path object for better cross-platform file handling
+        final String fullFileName = testCaseName + DEFAULT_VIDEO_EXTENSION;
         File directory = new File(userPath);
-        // Use Objects.requireNonNullElse for a safer check against null (if listFiles fails)
-        File[] files = Objects.requireNonNullElse(directory.listFiles(), new File[0]);
         try {
-            // Check if the directory itself exists and is readable
+            // 1. Check if the directory exists and is valid
             if (!directory.exists() || !directory.isDirectory())
             {
-                System.out.println("Directory '" + userPath + "' not found or is not a directory.");
-                //  throw new RuntimeException("Error: Directory '" + userPath + "' not found or is not a directory.");
+                String error = "VIDEO ERROR: Recording directory not found or is not accessible at: " + userPath;
+                System.err.println(error);
+                return error;
             }
+            // 2. List files, safely defaulting to an empty array if listFiles() returns null (e.g., permission denied)
+            File[] files = Objects.requireNonNullElse(directory.listFiles(), new File[0]);
             for (File file : files) {
-                // Check if the file is a regular file and its name matches (case-insensitive)
+                // 3. Check for the file name (case-insensitive for robustness)
                 if (file.isFile() && file.getName().equalsIgnoreCase(fullFileName))
                 {
                     // Use Path to get the absolute URI for proper URL construction
-                    Path filepath = file.toPath().toAbsolutePath();
+                    Path filepath = Paths.get(file.getAbsolutePath());
                     // file.toUri().toString() correctly handles protocol and slashes for all OS
                     String formattedPath = filepath.toUri().toString();
                     String linkText = "Execution Video";
+
                     // Return the HTML anchor tag
                     return "<a href=\"" + formattedPath + "\" target=\"_blank\">" + linkText + "</a>";
                 }
             }
-            // If the loop finishes without finding the file
-            // throw new RuntimeException("File not found: " + fullFileName + " in " + userPath);
-            System.out.println("File not found: " + fullFileName + " in " + userPath);
-            return null;
+            // 4. If the loop finishes without finding the file
+            String fileNotFoundError = "VIDEO NOT FOUND: File '" + fullFileName + "' not found in " + userPath;
+            System.err.println(fileNotFoundError);
+            return fileNotFoundError;
         } catch (Exception e) {
-            // Catching a generic Exception is okay here, but logging is better.
-            System.err.println("An unexpected error occurred while processing video files: " + e.getMessage());
-            e.printStackTrace();
+            // Catching any unexpected internal runtime exceptions (e.g., Path errors, severe file access issues)
+            String unexpectedError = "VIDEO ERROR: An unexpected error occurred while processing video files: " + e.getMessage();
+            System.err.println(unexpectedError);
+            return unexpectedError;
         }
-        // Default return value if file is not found or an error occurred
-        return null;
     }
-
 }

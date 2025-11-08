@@ -10,28 +10,35 @@ import java.util.regex.Pattern;
 
 import static core.config.ConfigReader.getIntProp;
 import static core.config.ConfigReader.getStrProp;
-
+/**
+ * Utility class for extracting specific log segments corresponding to a single test case
+ * and driver session from a log file, using configurable start and end markers.
+ * This class relies on properties defined in the configuration files (via {@code ConfigReader}).
+ */
 public class LogExtractorUtil {
 
     //private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH");
     private static final String DEFAULT_LOG_PATH = getStrProp("LOG_FILE_PATH", "execution-output/test-logs/Logs.log");
 
     /**
-     * <b>Overload 1: Extracts logs using TestCaseName as the unique filter and the default path: ${user.dir}/execution-output/test-logs/Logs.log <b/>
+     * Extracts logs using a test case name, a driver ID, and the default log file path:
+     * {@code ${user.dir}/execution-output/test-logs/Logs.log}.
      *
-     * @param testCaseName The test method name (e.g., "ToCheckLogin").
-     * @return The extracted logs as a single String.
+     * @param testCaseName The test method name (e.g., "ToCheckLogin") used to identify log segment start/end points.
+     * @param driverID     The unique identifier for the WebDriver session (e.g., a thread ID or hash).
+     * @return The extracted logs as a single String, or an error message if the file is not found or cannot be read.
      */
     public static String toGetTestCaseLogs(String testCaseName, String driverID) {
         return toGetTestCaseLogsCoreLogic(testCaseName, driverID, DEFAULT_LOG_PATH);
     }
 
     /**
-     * <b>Overload 2: Extracts logs using TestCaseName as the unique filter and a custom path.</b>
+     * Extracts logs using a test case name, a driver ID, and a custom log file path.
      *
-     * @param testCaseName The test method name (e.g., "ToCheckLogin").
-     * @param customPath      The user-provided path to the log file.
-     * @return The extracted logs as a single String.
+     * @param testCaseName The test method name (e.g., "ToCheckLogin") used to identify log segment start/end points.
+     * @param driverID     The unique identifier for the WebDriver session (e.g., a thread ID or hash).
+     * @param customPath   The user-provided path to the log file.
+     * @return The extracted logs as a single String, or an error message if the file is not found or cannot be read.
      */
     public static String toGetTestCaseLogs(String testCaseName, String driverID, String customPath) {
         String finalPath = (customPath != null && !customPath.trim().isEmpty())
@@ -39,7 +46,21 @@ public class LogExtractorUtil {
                 : DEFAULT_LOG_PATH;
         return toGetTestCaseLogsCoreLogic(testCaseName, driverID, finalPath);
     }
-
+    /**
+     * Core logic for reading the log file, identifying the test case log segment, and extracting lines.
+     * <p>Extraction criteria:</p>
+     * <ul>
+     * <li>Starts when a line matches all three markers: {@code START_MARKER}, {@code testCaseName}, and {@code driverID}.</li>
+     * <li>Stops when a line matches either the {@code END_PASS_MARKER} or {@code END_FAIL_MARKER}.</li>
+     * <li>Only lines containing the {@code driverID} or {@code testCaseName} are captured between markers.</li>
+     * <li>A maximum capture limit (MAX_CAPTURE_LINES) is enforced to prevent large memory consumption.</li>
+     * </ul>
+     *
+     * @param testCaseName The name of the test case to look for.
+     * @param driverID The driver session ID to thread the logs.
+     * @param filePath The resolved path to the log file.
+     * @return The extracted log segment.
+     */
     private static String toGetTestCaseLogsCoreLogic(String testCaseName, String driverID, String filePath) {
         final Path logFilePath = Paths.get(filePath);
         List<String> logs = new ArrayList<>();
@@ -52,12 +73,13 @@ public class LogExtractorUtil {
             final String END_PASS_MARKER = getStrProp("END_PASS_MARKER", "Test case pass");
             final String END_FAIL_MARKER = getStrProp("END_FAIL_MARKER", "Test case fail");
 
-            // Pre-calculate common regex patterns to avoid recalculating in the loop
-            final String DRIVER_ID_PATTERN = ".*\\[" + Pattern.quote(driverID) + "\\].*";
-            final String TEST_CASE_NAME_PATTERN = ".*" + Pattern.quote(testCaseName) + ".*";
-            final String START_MARKER_PATTERN = ".*" + Pattern.quote(START_MARKER) + ".*";
-            final String END_PASS_MARKER_PATTERN = ".*" + Pattern.quote(END_PASS_MARKER) + ".*";
-            final String END_FAIL_MARKER_PATTERN = ".*" + Pattern.quote(END_FAIL_MARKER) + ".*";
+            // Pre-calculate common regex patterns to avoid recalculating in the loop.
+            // Pattern.quote() ensures special characters in the names are treated literally.
+            final Pattern DRIVER_ID_PATTERN = Pattern.compile(".*" + Pattern.quote(driverID) + ".*");
+            final Pattern TEST_CASE_NAME_PATTERN = Pattern.compile(".*" + Pattern.quote(testCaseName) + ".*");
+            final Pattern START_MARKER_PATTERN = Pattern.compile(".*" + Pattern.quote(START_MARKER) + ".*");
+            final Pattern END_PASS_MARKER_PATTERN = Pattern.compile(".*" + Pattern.quote(END_PASS_MARKER) + ".*");
+            final Pattern END_FAIL_MARKER_PATTERN = Pattern.compile(".*" + Pattern.quote(END_FAIL_MARKER) + ".*");
 
             List<String> allLines = Files.readAllLines(logFilePath);
             boolean isCapturing = false;
@@ -66,9 +88,9 @@ public class LogExtractorUtil {
 
             for (String line : allLines) {
                 if (!isCapturing) {
-                    boolean isDriverIDMatch = line.matches(DRIVER_ID_PATTERN);
-                    boolean isTestCaseNameMatch = line.matches(TEST_CASE_NAME_PATTERN);
-                    boolean isStartMarkerMatch = line.matches(START_MARKER_PATTERN);
+                    boolean isDriverIDMatch = DRIVER_ID_PATTERN.matcher(line).matches();
+                    boolean isTestCaseNameMatch = TEST_CASE_NAME_PATTERN.matcher(line).matches();
+                    boolean isStartMarkerMatch = START_MARKER_PATTERN.matcher(line).matches();
 
                     boolean startCondition = isDriverIDMatch && isTestCaseNameMatch && isStartMarkerMatch;
                     if (startCondition) {
@@ -78,11 +100,12 @@ public class LogExtractorUtil {
                     }
                 } else {
                     captureLineCount ++;
-                    boolean currentLine = (line.matches(DRIVER_ID_PATTERN) || line.matches(TEST_CASE_NAME_PATTERN));
-                    if (currentLine) {
+                    // Only capture lines that contain either the Driver ID or the Test Case Name
+                    boolean currentLineMatchesContext = DRIVER_ID_PATTERN.matcher(line).matches() || TEST_CASE_NAME_PATTERN.matcher(line).matches();
+                    if (currentLineMatchesContext) {
                         logs.add(line);
-                        boolean isEndPassMarkerMatch = line.matches(END_PASS_MARKER_PATTERN);
-                        boolean isEndFailMarkerMatch = line.matches(END_FAIL_MARKER_PATTERN);
+                        boolean isEndPassMarkerMatch = END_PASS_MARKER_PATTERN.matcher(line).matches();
+                        boolean isEndFailMarkerMatch = END_FAIL_MARKER_PATTERN.matcher(line).matches();
                         boolean stopCondition = (isEndPassMarkerMatch || isEndFailMarkerMatch);
                         if (stopCondition) {
                             isCapturing = false;
@@ -90,15 +113,20 @@ public class LogExtractorUtil {
                         }
                     }
                     if (captureLineCount >= MAX_CAPTURE_LINES) {
+                        System.err.println("Warning: Log extraction for test case " + testCaseName + " hit MAX_CAPTURE_LINES limit of " + MAX_CAPTURE_LINES + ".");
                         isCapturing = false;
                         break;
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("An unexpected error occurred while reading log file: " + e.getMessage());
+            System.err.println("An unexpected error occurred while reading log file: " + filePath + ". Error: " + e.getMessage());
             return "ERROR: Failed to read log file due to IOException: " + e.getMessage();
-        }
+        } catch (Exception e) {
+        // Catch any unexpected runtime exceptions, e.g., issues with ConfigReader or null pointers
+        System.err.println("An unexpected error occurred in LogExtractorUtil: " + e.getMessage());
+        return "ERROR: An unexpected internal error occurred: " + e.getMessage();
+    }
         return String.join("\n", logs);
     }
 }
