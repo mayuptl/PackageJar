@@ -6,7 +6,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class ConfigReader {
+/**
+ * Utility class for reading configuration properties from various sources.
+ * It supports two main modes of operation:
+ * * 1. **Cached Access (get...Prop):** Reads the core 'config.properties' file once on
+ * startup, merging defaults from the JAR with overrides from the external classpath.
+ * 2. **File System Access (get...PropFromPath):** Reads properties ad-hoc from a
+ * specified file path every time the method is called, for specific, non-core configs.
+ */
+public final class ConfigReader {
     // We use the same name for the resource inside the JAR and the consumer override
     private static final String RESOURCE_PATH = "config.properties";
 
@@ -17,9 +25,15 @@ public class ConfigReader {
     static {
         loadMergedProperties();
     }
+    /**
+     * Private constructor to prevent external instantiation of this utility class.
+     */
+    private ConfigReader() {
+        // Utility class: all methods are static.
+    }
 
     /**
-     * Loads the properties with the correct merging priority:
+     * Loads the core properties with the correct merging priority:
      * 1. Load the default properties from INSIDE the current JAR (lower priority).
      * 2. Overlay those defaults with the properties from the external consumer classpath (higher priority).
      * The result is stored in the static CACHED_PROPS object.
@@ -55,11 +69,16 @@ public class ConfigReader {
         }
     }
 
-    // The methods below are simplified to use the CACHED_PROPS object directly.
+    // ====================================================================
+    // 1. CACHED PROPERTY ACCESS METHODS (Uses merged config.properties)
+    // ====================================================================
 
     /**
-     * Get a String property value. Throws RuntimeException if the key is missing.
-     * Use this for MANDATORY properties.
+     * Gets a mandatory String property value from the cached core configuration.
+     *
+     * @param key The property key to look up.
+     * @return The non-null, non-empty String property value.
+     * @throws RuntimeException if the key is missing or the value is empty.
      */
     public static String getStrProp(String key) {
         String value = CACHED_PROPS.getProperty(key);
@@ -70,11 +89,12 @@ public class ConfigReader {
     }
 
     /**
-     * Get a String property value, falling back to a default if the key is missing.
-     * Use this for OPTIONAL properties.
+     * Gets an optional String property value from the cached core configuration,
+     * using a default value if the key is missing or empty.
+     *
      * @param key The property key to look up.
      * @param defaultValue The value to return if the key is missing or empty.
-     * @return The property value or the default value.
+     * @return The property value or the provided default value.
      */
     public static String getStrProp(String key, String defaultValue) {
         String value = CACHED_PROPS.getProperty(key);
@@ -83,11 +103,29 @@ public class ConfigReader {
         }
         return value.trim();
     }
-
     /**
-     * Get an integer property value safely, using a default value if the key is missing
-     * or the parsed value is invalid.
-     * Use this for OPTIONAL properties.
+     * Gets a mandatory integer property value from the cached core configuration.
+     *
+     * @param key The property key to look up.
+     * @return The parsed integer value.
+     * @throws RuntimeException if the key is missing, empty, or the value cannot be parsed as an integer.
+     */
+    public static int getIntProp(String key) {
+        String value = getStrProp(key); // Will throw RuntimeException if key is missing/empty
+
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("❌ Invalid integer value for mandatory key: " + key + " -> " + value, e);
+        }
+    }
+    /**
+     * Gets an optional integer property value from the cached core configuration,
+     * using a default value if the key is missing or invalid.
+     *
+     * @param key The property key to look up.
+     * @param defaultValue The value to return if the key is missing or invalid.
+     * @return The parsed integer value or the provided default value.
      */
     public static int getIntProp(String key, int defaultValue) {
         String value = getStrProp(key, String.valueOf(defaultValue));
@@ -100,34 +138,12 @@ public class ConfigReader {
             return defaultValue;
         }
     }
-
     /**
-     * Get an integer property value. Throws RuntimeException if the key is missing
-     * or the parsed value is invalid.
-     * Use this for MANDATORY properties.
-     */
-    public static int getIntProp(String key) {
-        String value = getStrProp(key); // Will throw RuntimeException if key is missing/empty
-
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("❌ Invalid integer value for mandatory key: " + key + " -> " + value, e);
-        }
-    }
-
-    /**
-     * Get a boolean property value safely, using a default value if the key is missing.
-     * Use this for OPTIONAL properties.
-     */
-    public static boolean getBoolProp(String key, boolean defaultValue) {
-        String value = getStrProp(key, String.valueOf(defaultValue));
-        return Boolean.parseBoolean(value.trim());
-    }
-
-    /**
-     * Get a boolean property value. Throws RuntimeException if the key is missing.
-     * Use this for MANDATORY properties.
+     * Gets a mandatory boolean property value from the cached core configuration.
+     *
+     * @param key The property key to look up.
+     * @return The parsed boolean value (true if "true", false otherwise).
+     * @throws RuntimeException if the key is missing or empty.
      */
     public static boolean getBoolProp(String key) {
         // getStrProp(key) handles missing or empty keys by throwing a RuntimeException.
@@ -137,11 +153,27 @@ public class ConfigReader {
         return Boolean.parseBoolean(value.trim());
     }
     /**
+     * Gets an optional boolean property value from the cached core configuration,
+     * using a default value if the key is missing or empty.
+     *
+     * @param key The property key to look up.
+     * @param defaultValue The value to return if the key is missing or empty.
+     * @return The parsed boolean value or the provided default value.
+     */
+    public static boolean getBoolProp(String key, boolean defaultValue) {
+        String value = getStrProp(key, String.valueOf(defaultValue));
+        return Boolean.parseBoolean(value.trim());
+    }
+    // ====================================================================
+    // 2. FILE SYSTEM ACCESS METHODS (Reads from specified path, not cached)
+    // ====================================================================
+    /**
      * Helper to read properties from a project-level directory (File System).
      * The path is resolved relative to the directory where the JVM process starts (usually project root).
      *
      * @param filePath The relative path from the project root (e.g., "test-config/config.properties").
      * @return The loaded Properties object.
+     * @throws IOException If the file is not found or cannot be read.
      */
     private static Properties loadFromFileSystem(String filePath) throws IOException {
         Properties props = new Properties();
@@ -157,9 +189,13 @@ public class ConfigReader {
 
         return props;
     }
-
     /**
-     * Reads a String property safely from a given file path.
+     * Reads a mandatory String property from a specified file path.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @return The non-null, non-empty String property value.
+     * @throws RuntimeException if the file cannot be read, the key is missing, or the value is empty.
      */
     public static String getStrPropFromPath(String key, String filePath) {
         try {
@@ -177,9 +213,38 @@ public class ConfigReader {
             throw new RuntimeException("❌ Unable to read property file: " + filePath, e);
         }
     }
-
     /**
-     * Reads an integer property from a given file path.
+     * Reads an optional String property from a specified file path,
+     * returning a default value if the key is missing or empty.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @param defaultValue The value to return if the key is missing or empty.
+     * @return The property value or the provided default value.
+     * @throws RuntimeException if the file cannot be read.
+     */
+    public static String getStrPropFromPath(String key, String filePath, String defaultValue) {
+        try {
+            Properties prop = loadFromFileSystem(filePath);
+            String value = prop.getProperty(key);
+
+            if (value == null || value.trim().isEmpty()) {
+                return defaultValue;
+            }
+
+            return value.trim();
+
+        } catch (IOException e) {
+            throw new RuntimeException("❌ Unable to read property file: " + filePath, e);
+        }
+    }
+    /**
+     * Reads a mandatory integer property from a specified file path.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @return The parsed integer value.
+     * @throws RuntimeException if the file cannot be read, the key is missing, or the value is not a valid integer.
      */
     public static int getIntPropFromPath(String key, String filePath) {
         String value = getStrPropFromPath(key, filePath);
@@ -190,12 +255,54 @@ public class ConfigReader {
                     " in file: " + filePath + " -> " + value);
         }
     }
-
     /**
-     * Reads a boolean property from a given file path.
+     * Reads an optional integer property from a specified file path,
+     * returning a default value if the key is missing or invalid.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @param defaultValue The value to return if the key is missing or invalid.
+     * @return The parsed integer value or the provided default value.
+     * @throws RuntimeException if the file cannot be read.
+     */
+    public static int getIntPropFromPath(String key, String filePath, int defaultValue) {
+        // Use the optional String method for safety
+        String value = getStrPropFromPath(key, filePath, String.valueOf(defaultValue));
+
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            System.err.println("ERROR: Invalid integer format for key: " + key +
+                    " in file: " + filePath + " -> " + value + ". Using default: " + defaultValue);
+            return defaultValue;
+        }
+    }
+    /**
+     * Reads a mandatory boolean property from a specified file path.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @return The parsed boolean value (true if "true", false otherwise).
+     * @throws RuntimeException if the file cannot be read, or the key is missing or empty.
      */
     public static boolean getBoolPropFromPath(String key, String filePath) {
         String value = getStrPropFromPath(key, filePath);
         return Boolean.parseBoolean(value.trim());
     }
+    /**
+     * Reads an optional boolean property from a specified file path,
+     * returning a default value if the key is missing or empty.
+     *
+     * @param key The property key to look up.
+     * @param filePath The file system path to the properties file.
+     * @param defaultValue The value to return if the key is missing or empty.
+     * @return The parsed boolean value or the provided default value.
+     * @throws RuntimeException if the file cannot be read.
+     */
+    public static boolean getBoolPropFromPath(String key, String filePath, boolean defaultValue) {
+        // Use the optional String method for safety
+        String value = getStrPropFromPath(key, filePath, String.valueOf(defaultValue));
+        return Boolean.parseBoolean(value.trim());
+    }
+
 }

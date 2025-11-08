@@ -2,30 +2,66 @@ package managers;
 
 import org.openqa.selenium.WebDriver;
 
+/**
+ * DriverManager uses ThreadLocal to store the WebDriver instance.
+ * This ensures that each TestNG thread accesses its own, isolated WebDriver instance,
+ * which is essential for safe and reliable parallel test execution.
+ */
 public class DriverManager {
 
-    // private static WebDriver driver;
+    // ThreadLocal variable to store the WebDriver instance for the current thread.
+    // This provides the necessary isolation for parallel execution.
     private static final ThreadLocal<WebDriver> threadLocalDriver = new ThreadLocal<>();
-    /** Return the driver instance specific to the current thread */
+    // Private constructor to prevent external instantiation of this utility class.
+    private DriverManager() {
+        // Utility class: all methods are static.
+    }
+    /**
+     * Retrieves the WebDriver instance associated with the current thread.
+     * * @return The WebDriver instance for the current thread.
+     * @throws IllegalStateException if no driver is currently set for the thread.
+     */
     public static WebDriver getDriver()
     {
-        return threadLocalDriver.get();
+        WebDriver driver = threadLocalDriver.get();
+        if (driver == null) {
+            // This prevents a NullPointerException later in the test and gives a clear error message.
+            throw new IllegalStateException("WebDriver is not initialized for the current thread. " +
+                    "Ensure initDriver() has been called and completed successfully.");
+        }
+        return driver;
     }
-    /** Store the driver instance for the current thread */
-    public static void setDriver(WebDriver webDriver)
+    /**
+     * Associates a WebDriver instance with the current thread.
+     * This is called by TestBaseAppUtil after successfully creating the driver.
+     * * @param driver The WebDriver instance to set.
+     */
+    public static void setDriver(WebDriver driver)
     {
-        threadLocalDriver.set(webDriver);
+        if (driver == null) {
+            throw new IllegalArgumentException("Cannot set a null WebDriver instance in DriverManager.");
+        }
+        threadLocalDriver.set(driver);
     }
-    /** Quite driver
-     * Remove the driver from ThreadLocal to prevent memory leaks */
+    /**
+     * Safely quits the WebDriver instance associated with the current thread
+     * and removes the reference from the ThreadLocal to prevent memory leaks.
+     * This should be called in the teardown method (e.g., @AfterClass).
+     */
     public static void quitDriver()
     {
         WebDriver driver = threadLocalDriver.get();
-        if (driver != null)
-        {
-            driver.quit();
-            // Important: Remove the driver from ThreadLocal to prevent memory leaks
-            threadLocalDriver.remove();
+        if (driver != null) {
+            try {
+                // Quit the browser session
+                driver.quit();
+                //System.out.println("WebDriver quit successfully for thread: " + Thread.currentThread().getId());
+            } catch (Exception e) {
+                System.err.println("Error while quitting WebDriver for thread " + Thread.currentThread().getId() + ": " + e.getMessage());
+            } finally {
+                // CRITICAL: Remove the driver reference from ThreadLocal
+                threadLocalDriver.remove();
+            }
         }
     }
 }
