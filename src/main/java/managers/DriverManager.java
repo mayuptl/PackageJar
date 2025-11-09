@@ -2,6 +2,8 @@ package managers;
 
 import org.openqa.selenium.WebDriver;
 
+import static core.config.ConfigReader.getStrProp;
+
 /**
  * DriverManager uses ThreadLocal to store the WebDriver instance.
  * This ensures that each TestNG thread accesses its own, isolated WebDriver instance,
@@ -23,6 +25,7 @@ public class DriverManager {
      */
     public static WebDriver getDriver()
     {
+        getStrProp("BROWSER"); // safe entry point to load .properties value which will set log4j2 log file path
         WebDriver driver = threadLocalDriver.get();
         if (driver == null) {
             // This prevents a NullPointerException later in the test and gives a clear error message.
@@ -38,6 +41,7 @@ public class DriverManager {
      */
     public static void setDriver(WebDriver driver)
     {
+        getStrProp("BROWSER"); // safe entry point to load .properties value which will set log4j2 log file path
         if (driver == null) {
             throw new IllegalArgumentException("Cannot set a null WebDriver instance in DriverManager.");
         }

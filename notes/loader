@@ -1,0 +1,73 @@
+package com.yourcorp.utils.logging;
+
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.util.ContextInitializer;
+import java.io.InputStream;
+import java.util.Properties;
+
+/**
+ * Automatically executed by Log4j2 via the Java ServiceLoader mechanism.
+ * This class loads logging configuration values from the centralized 'config.properties'
+ * file and sets them as System Properties BEFORE Log4j attempts to parse log4j2.xml.
+ * This guarantees the necessary variables (like log directory) are resolved
+ * without any consumer-side code changes.
+ */
+public class AutoPropertyInitializer implements ContextInitializer {
+
+    // --- We are now reading from config.properties ---
+    private static final String CONFIG_FILE_NAME = "config.properties";
+
+    // --- Keys used in config.properties to set Log4j System Properties ---
+    private static final String SOURCE_LOG_DIR_KEY = "logging.logDir";
+    private static final String SOURCE_FILE_NAME_KEY = "logging.fileName";
+
+    // --- Log4j keys that must be set as System Properties ---
+    private static final String TARGET_LOG4J_DIR_KEY = "log4j2.logDir";
+    private static final String TARGET_LOG4J_FILE_KEY = "log4j2.fileName";
+
+
+    @Override
+    public void initialize(LoggerContext context) {
+        // System.out.println is used here because Log4j is not yet fully configured.
+        System.out.println("AutoPropertyInitializer: Starting Log4j property injection from " + CONFIG_FILE_NAME + "...");
+
+        try (InputStream input = Thread.currentThread().getContextClassLoader().getResourceAsStream(CONFIG_FILE_NAME)) {
+
+            if (input == null) {
+                System.err.println("AutoPropertyInitializer: Configuration file '" + CONFIG_FILE_NAME + "' not found on classpath. Skipping Log4j setup.");
+                return;
+            }
+
+            Properties configProps = new Properties();
+            configProps.load(input);
+
+            // 1. Set the Log Directory Property
+            injectProperty(configProps, SOURCE_LOG_DIR_KEY, TARGET_LOG4J_DIR_KEY);
+
+            // 2. Set the Log File Name Property
+            injectProperty(configProps, SOURCE_FILE_NAME_KEY, TARGET_LOG4J_FILE_KEY);
+
+        } catch (Exception ex) {
+            System.err.println("AutoPropertyInitializer: Failed to load properties: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Helper method to read a value from config.properties and set it as a System Property.
+     * Only sets the System Property if it hasn't already been set (allowing consumer overrides via JVM args).
+     */
+    private void injectProperty(Properties source, String sourceKey, String targetKey) {
+        if (source.containsKey(sourceKey)) {
+            String value = source.getProperty(sourceKey);
+
+            if (System.getProperty(targetKey) == null) {
+                System.setProperty(targetKey, value);
+                System.out.println("AutoPropertyInitializer: Injected System Property: " + targetKey + " = " + value);
+            } else {
+                System.out.println("AutoPropertyInitializer: System Property " + targetKey + " already set. Keeping existing value.");
+            }
+        } else {
+             System.out.println("AutoPropertyInitializer: Source key '" + sourceKey + "' not found in " + CONFIG_FILE_NAME + ". Skipping.");
+        }
+    }
+}

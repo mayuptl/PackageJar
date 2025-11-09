@@ -1,5 +1,7 @@
 package core.logging;
 
+import core.config.ConfigReader;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,8 +20,10 @@ import static core.config.ConfigReader.getStrProp;
 public class LogExtractorUtil {
 
     //private static final String DEFAULT_LOG_PATH = getStrProp("DEFAULT_LOG_PATH");
-    private static final String DEFAULT_LOG_PATH = getStrProp("LOG_FILE_PATH", "execution-output/test-logs/Logs.log");
-
+   // private static final String DEFAULT_LOG_PATH = getStrProp("LOG_FILE_PATH", "execution-output/test-logs/Logs.log");
+    static String logDir = ConfigReader.getStrProp("LOG_FILE_DIR", "execution-output/test-logs");
+    static String logFileName=ConfigReader.getStrProp("LOG_FILE_NAME", "Logs.log");
+    private static final String DEFAULT_LOG_PATH = logDir +"/"+logFileName;
     /**
      * Extracts logs using a test case name, a driver ID, and the default log file path:
      * {@code ${user.dir}/execution-output/test-logs/Logs.log}.
@@ -62,6 +66,12 @@ public class LogExtractorUtil {
      * @return The extracted log segment.
      */
     private static String toGetTestCaseLogsCoreLogic(String testCaseName, String driverID, String filePath) {
+        if (testCaseName == null || testCaseName.trim().isEmpty()) {
+            return "ERROR: Cannot extract logs. The testCaseName provided is null or empty.";
+        }
+        if (driverID == null || driverID.trim().isEmpty()) {
+            return "ERROR: Cannot extract logs. The driverID provided is null or empty.";
+        }
         final Path logFilePath = Paths.get(filePath);
         List<String> logs = new ArrayList<>();
         try {

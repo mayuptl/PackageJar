@@ -11,8 +11,10 @@
 
         <!-- Define the base logging directory -->
         <!-- ${sys:user.dir} points to D:\Work\Automation\app-utils\app-utils\target\classes when running tests -->
-        <Property name="LOG_DIR">execution-output/test-logs</Property>
-        <Property name="LOG_FILE_NAME">${LOG_DIR}/Logs.log</Property>
+        <Property name="LOG_DIR">${sys:log4j2.logDir}</Property>
+        <Property name="LOG_FILE_NAME">${sys:log4j2.logDir}/${sys:log4j2.fileName}</Property>
+        <!--<Property name="LOG_DIR">execution-output/test-logs</Property>
+        <Property name="LOG_FILE_NAME">${LOG_DIR}/Logs.log</Property>-->
     </Properties>
 
     <Appenders>
@@ -25,8 +27,8 @@
         <!-- The RollingFile appender is generally more robust and flexible for logging to files. -->
         <!-- Log4j 2 uses the `filePermissions` attribute to attempt to ensure file creation. -->
         <RollingFile name="FileAppender"
-                     fileName="${LOG_FILE_NAME}"
-                     filePattern="${LOG_DIR}/archive/AppUtils-%d{yyyy-MM-dd}-%i.log.gz"
+                     fileName="${sys:log4j2.logDir}/${sys:log4j2.fileName}"
+                     filePattern="${sys:log4j2.logDir}/archive/Logs-%d{yyyy-MM-dd}-%i.log.gz"
                      createOnDemand="true">
             <PatternLayout pattern="${FILE_PATTERN}" />
 
@@ -38,7 +40,6 @@
             </Policies>
             <!-- Default Rollover Strategy -->
             <DefaultRolloverStrategy max="20" />
-
         </RollingFile>
     </Appenders>
 

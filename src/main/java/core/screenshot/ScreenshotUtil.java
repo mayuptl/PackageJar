@@ -28,7 +28,7 @@ public class ScreenshotUtil
        ExtentTest test = ExtentManager.getTest();
        if(test == null)
        {
-           System.err.println("ExtentTest is null. Did you call stepss() before onTestStart?");
+         //  System.err.println("ExtentTest is null. Did you call stepss() before onTestStart?");
            return;
        }
         if(driver != null)

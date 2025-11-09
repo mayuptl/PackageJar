@@ -1,7 +1,9 @@
 package Demo;
 
 import core.base.TestBaseAppUtil;
+import core.config.ConfigReader;
 import core.screenshot.ScreenshotUtil;
+import managers.DriverManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
@@ -12,11 +14,12 @@ import static core.wait.WaitUtil.staticWait;
 
 public class TC01 extends TestBaseAppUtil {
 
-    private static final Logger log = LogManager.getLogger(TC01.class);
+   // private final Logger log = LogManager.getLogger(TC01.class);
 
     @BeforeClass
     public void setup()
     {
+        DriverManager.getDriver();
         Logger classLog= LogManager.getLogger("TC01");
         classLog.info("End to end start\n");
     }
@@ -57,5 +60,13 @@ public class TC01 extends TestBaseAppUtil {
         log.info("This test2 log to test driver id logic");
         Assert.assertTrue(true);*/
         log.info("Test case pass\n");
+    }
+
+    @Test
+    public void testt()
+    {
+        String logDir = ConfigReader.getStrProp("LOG_FILE_DIR", "execution-output/test-logs");
+        String logFileName=ConfigReader.getStrProp("LOG_FILE_NAME", "Logs.log");
+        System.out.println(logDir +" "+logFileName);
     }
 }

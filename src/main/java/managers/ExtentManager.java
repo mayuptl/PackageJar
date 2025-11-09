@@ -2,11 +2,8 @@ package managers;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.MediaEntityBuilder;
-import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,11 +17,9 @@ import static core.config.ConfigReader.getStrProp;
  */
 public class ExtentManager {
     private static ExtentReports extent;
-    private static final String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT","execution-output/test-reports/ExtentReport.html");
-    // NEW: ThreadLocal to store the current running test's ExtentTest instance
+    private static final String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_PATH","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
     private static final ThreadLocal<ExtentTest> currentTest = new ThreadLocal<>();
     private static final Map<String,ExtentTest> classNodeMap = new ConcurrentHashMap<>();
-
     /**
      * <b>Initializes or returns the singleton ExtentReports instance using a custom file path.</b>
      * This method configures the report's theme, title, and system information.
@@ -36,12 +31,16 @@ public class ExtentManager {
         if (extent == null) {
             ExtentSparkReporter sparkReporter = new ExtentSparkReporter(reportFilePath);
             sparkReporter.config().setTheme(Theme.STANDARD);
-            sparkReporter.config().setDocumentTitle("Test Automation Report");
-            sparkReporter.config().setReportName("Test Results");
+            sparkReporter.config().setDocumentTitle(getStrProp("SET_DOCUMENT_TITLE","Test Automation Report"));
+            sparkReporter.config().setReportName(getStrProp("SET_REPORT_NAME","Test Results"));
             extent = new ExtentReports();
             extent.attachReporter(sparkReporter);
-            extent.setSystemInfo("OS", System.getProperty("os.name"));
-            extent.setSystemInfo("Java Version", System.getProperty("java.version"));
+            extent.setSystemInfo("REPORT_FOR", getStrProp("REPORT_FOR","Sprint testing"));
+            extent.setSystemInfo("ENVIRONMENT", getStrProp("ENVIRONMENT","Test"));
+            extent.setSystemInfo("APPLICATION_VERSION", getStrProp("APPLICATION_VERSION","-"));
+            extent.setSystemInfo("TESTER_NAME",getStrProp("TESTER_NAME","QA"));
+            //   extent.setSystemInfo("OS", System.getProperty("os.name"));
+            //  extent.setSystemInfo("JAVA_VERSION", System.getProperty("java.version"));
         }
         return extent;
     }
@@ -64,7 +63,9 @@ public class ExtentManager {
      */
     public static ExtentTest getOrCreateClassNode(String clasName)
     {
-        return classNodeMap.computeIfAbsent(clasName,k->getReportInstance().createTest(k));
+        // Ensure the report is initialized before creating nodes
+        getReportInstance();
+        return classNodeMap.computeIfAbsent(clasName,k->extent.createTest(k));
     }
     /**
      * Returns the **thread-local** ExtentTest instance associated with the current running test method.
@@ -90,6 +91,7 @@ public class ExtentManager {
     public static void removeTest() {
         currentTest.remove();
     }
+
     //==========================================================//
     /**
      * Writes all buffered information to the physical report file.
@@ -107,7 +109,7 @@ public class ExtentManager {
      * @param testName The name of the test method.
      * @param description A brief description of the test.
      */
-  /*  public static void createTest(String testName, String description) {
+  /* public static void createTest(String testName, String description) {
         // Find the class node or create it
         String className = Thread.currentThread().getStackTrace()[3].getClassName();
         ExtentTest classNode = getOrCreateClassNode(className);

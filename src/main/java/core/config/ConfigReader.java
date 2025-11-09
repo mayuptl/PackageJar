@@ -41,10 +41,11 @@ public final class ConfigReader {
     private static void loadMergedProperties() {
         // --- STEP 1: Load JAR Defaults (Lowest Priority) ---
         // We use ConfigReader.class.getResourceAsStream to specifically look inside the current JAR.
+        //System.out.println("DEBUG: loadMergedProperties() called by: " + Thread.currentThread().getStackTrace()[3]);
         try (InputStream defaultsStream = ConfigReader.class.getResourceAsStream("/" + RESOURCE_PATH)) {
             if (defaultsStream != null) {
                 CACHED_PROPS.load(defaultsStream);
-                System.out.println("INFO: Loaded default properties from inside JAR.");
+              //  System.out.println("INFO: Loaded default properties from inside JAR.");
             }
         } catch (IOException e) {
             // Log this, but it shouldn't stop the application if the config file is missing inside the JAR.
@@ -61,12 +62,49 @@ public final class ConfigReader {
 
                 // Merge the overrides into the cached properties, consumer keys will overwrite defaults
                 CACHED_PROPS.putAll(overrideProps);
-                System.out.println("INFO: Overlaid properties with consumer config from classpath.");
+                //System.out.println("INFO: Overlaid properties with consumer config from classpath.");
             }
+            // --- STEP 3: Map Config Keys to Log4j System Properties (Simplified) ---
+            // This process MUST happen before Log4j reads its configuration file.
+            // 1. Map LOG_FILE_DIR (Config Key) to log4j2.logDir (System Property Key)
+            injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
+            // 2. Map LOG_FILE_NAME (Config Key) to log4j2.fileName (System Property Key)
+            injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
         } catch (IOException e) {
             // This is acceptable; no consumer override file was found.
             System.out.println("INFO: No consumer config.properties file found on external classpath. Using defaults.");
         }
+    }
+    /**
+     * Helper method to map a configuration key's value to a system property key,
+     * but only if the system property has not been set externally.
+     *
+     * @param configKey The key in the cached properties (e.g., "LOG_FILE_DIR").
+     * @param systemPropertyKey The target system property key (e.g., "log4j2.logDir").
+     */
+    private static void injectSystemProperty(String configKey, String systemPropertyKey) {
+        final String configValue = CACHED_PROPS.getProperty(configKey);
+        if (configValue != null && System.getProperty(systemPropertyKey) == null) {
+            // Case 1: Config key found, System Property NOT set -> SET IT
+            System.setProperty(systemPropertyKey, configValue);
+            //System.out.println("INFO: Set Log4j System Property " + systemPropertyKey + " = " + configValue);
+        } else if (System.getProperty(systemPropertyKey) != null) {
+            // Case 2: System Property already set externally -> KEEP EXISTING VALUE
+          //  System.out.println("INFO: System Property " + systemPropertyKey + " already set externally. Keeping existing value.");
+        } else {
+            // Case 3: Config key not found -> WARN
+            System.err.println("Configuration key '" + configKey + "' not found in config.properties.");
+        }
+    }
+
+    /**
+     * Retrieves a property value by key from the merged configuration cache.
+     *
+     * @param key The key to look up.
+     * @return The property value or null if not found.
+     */
+    public static String getProperty(String key) {
+        return CACHED_PROPS.getProperty(key);
     }
 
     // ====================================================================

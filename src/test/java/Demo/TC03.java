@@ -9,6 +9,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import static core.config.ConfigReader.getStrProp;
+
 public class TC03 extends TestBaseAppUtil {
 
     @BeforeClass
@@ -52,5 +54,11 @@ public class TC03 extends TestBaseAppUtil {
         log.info("This test2 log to test driver id logic");
         Assert.assertTrue(true);
         log.info("Test case pass\n");
+    }
+     @Test
+    public void ttt()
+    {
+       String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_PATH","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
+       System.out.println(DEFAULT_REPORT_PATH);
     }
 }

@@ -13,14 +13,13 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariOptions;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeTest;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+
+import static core.config.ConfigReader.getStrProp;
 
 /**
  * Base utility class for initializing, managing, and tearing down WebDriver instances.
@@ -32,14 +31,13 @@ public class TestBaseAppUtil {
      * This field is often synchronized with the driver managed by {@code DriverManager}.
      */
     public WebDriver driver;
-
     /**
      * Initializes the WebDriver, sets implicit waits, and navigates to the starting URL.
      * <p>
      * NOTE: This method currently uses hardcoded initialization parameters for demonstration/local testing.
      * For production test suites, configuration should be loaded dynamically (e.g., from properties).
      */
-   // @BeforeClass
+  //  @BeforeClass
     public void lunchAppUtil()
     {
         String CUSTOM_OPTIONS = "ARG:--force-device-scale-factor=0.8,ARG:--start-maximized,ARG:--incognito,ARG:--disable-infobars,ARG:--enable-logging=stderr,PREF:download.default_directory=/execution-output/test-downloads/,CAP:acceptInsecureCerts=true";
@@ -114,6 +112,7 @@ public class TestBaseAppUtil {
      * @throws IllegalArgumentException If the specified browser name is not supported (e.g., "opera").
      */
     private WebDriver initDriverCore(String BrowserName, String driverPath, String customOptions) {
+        getStrProp("BROWSER"); // safe entry point to load .properties value which will set log4j2 log file path
         WebDriver driver;
         // Map to hold preferences (for Chrome, Edge, Firefox)
         Map<String, Object> prefs = new HashMap<>();

@@ -108,7 +108,8 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
             RecorderManager.getRecorder().stop();
             String videoLinkHtml = toGetVideoFilePath(methodName);
             if (videoLinkHtml != null) {
-                test.info(videoLinkHtml +" : " +methodName);
+              //  test.info(videoLinkHtml +" : " +methodName);
+                test.info("Execution video link :<br>"+videoLinkHtml);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }

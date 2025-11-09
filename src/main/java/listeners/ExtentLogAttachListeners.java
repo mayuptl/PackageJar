@@ -12,11 +12,8 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static core.config.ConfigReader.getBoolProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
+
 /**
  * ExtentLogAttachListeners is the comprehensive listener responsible for:
  * 1. Managing Extent Reports (start, success, failure, skip, finish).

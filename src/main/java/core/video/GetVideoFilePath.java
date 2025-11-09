@@ -72,10 +72,10 @@ public class GetVideoFilePath {
                     Path filepath = Paths.get(file.getAbsolutePath());
                     // file.toUri().toString() correctly handles protocol and slashes for all OS
                     String formattedPath = filepath.toUri().toString();
-                    String linkText = "Execution Video";
-
+                    String linkText = "Execution Video"; //Execution Video
+                    //testCaseName
                     // Return the HTML anchor tag
-                    return "<a href=\"" + formattedPath + "\" target=\"_blank\">" + linkText + "</a>";
+                    return "<a href=\"" + formattedPath + "\" target=\"_blank\">" + testCaseName + "</a>";
                 }
             }
             // 4. If the loop finishes without finding the file

@@ -1,0 +1,42 @@
+package core.base;
+
+import core.config.ConfigReader;
+
+public class SetupGuard {
+
+    /**
+     * This static block ensures that the core framework dependencies,
+     * such as the Configuration Reader, are initialized/loaded
+     * the very first time this class is referenced.
+     * This avoids the "Logger first" static initialization crash
+     * by executing the essential setup before the Logger tries to read properties.
+     */
+    static {
+       // System.out.println("Initializing SetupGuard: Ensuring ConfigReader is loaded safely...");
+
+        // Use a dummy call to ConfigReader's public getter.
+        // This will trigger the private loadMergeProperties() safely
+        // in a controlled static block execution.
+        try {
+            // You can change "DUMMY_KEY" to any existing key, or just assume it loads the properties.
+            ConfigReader.getStrProp("BROWSER");
+        } catch (Exception e) {
+            // Log the error using System.out/err if the framework logging isn't ready.
+            System.err.println("CRITICAL: Failed to load ConfigReader during static initialization.");
+            e.printStackTrace();
+        }
+    }
+
+    // Public method that can be called, though the real work happens in the static block.
+    public static void initialize() {
+        // This method does nothing, but ensures the static block above is executed.
+        // It's here for explicit calling if needed.
+    }
+}
+// *********************** uses of this ********************
+add below line in base test
+ // This static block runs once when the BaseTest is loaded,
+    // guaranteeing SetupGuard (and thus ConfigReader) is initialized first.
+    static {
+        SetupGuard.initialize();
+    }
