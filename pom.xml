@@ -5,7 +5,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>3.5.7-SNAPSHOT</version>
+    <version>3.5.8-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>

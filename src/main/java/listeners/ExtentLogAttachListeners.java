@@ -10,9 +10,17 @@ import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.Arrays;
+
+import static core.config.ConfigReader.getStrProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
+import static java.nio.file.Files.createDirectory;
 
 /**
  * ExtentLogAttachListeners is the comprehensive listener responsible for:
@@ -46,7 +54,7 @@ public class ExtentLogAttachListeners implements ITestListener {
         ExtentTest test = ExtentManager.getTest();
         String methodName = result.getMethod().getMethodName();
         /*attachScreenshot(test;*/
-        attachLogs(test,methodName);
+        attachLogs(test,methodName,result);
         ExtentManager.removeTest();
     }
 
@@ -55,7 +63,7 @@ public class ExtentLogAttachListeners implements ITestListener {
         ExtentTest test = ExtentManager.getTest();
         String methodName = result.getMethod().getMethodName();
         attachScreenshot(test);
-        attachLogs(test,methodName);
+        attachLogs(test,methodName,result);
         test.fail(result.getThrowable());
         ExtentManager.removeTest();
     }
@@ -84,14 +92,14 @@ public class ExtentLogAttachListeners implements ITestListener {
      * @param test The current ExtentTest node.
      * @param methodName The name of the currently executing test method.
      */
-    private void attachLogs(ExtentTest test,String methodName)
-    {
+    private void attachLogs(ExtentTest test,String methodName,ITestResult result)  {
         String driverID = getDriverIdFromContext();
         String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
         String styledLogs=
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
                         + testLogs + "</pre></div>";
         test.info(styledLogs);
+        createClassLevelLogsFolder(testLogs,result);
     }
     /**
      * Captures a screenshot and adds it to the Extent Report test node.
@@ -107,6 +115,29 @@ public class ExtentLogAttachListeners implements ITestListener {
         }else {
             System.err.println("Driver is null. failed to attached screenshot");
         }
+    }
+    public void createClassLevelLogsFolder(String testLogs,ITestResult result)
+    {
+        String className = result.getTestClass().getRealClass().getSimpleName();
+        String methodName = result.getMethod().getMethodName();
+        String logDir=getStrProp("LOG_FILE_DIR"); //execution-output/test-logs
+        String folderPathString = logDir +"/class-level-logs"; //execution-output/test-logs/class-level-logs
+        String relativePath = folderPathString +"/"+ className; //execution-output/test-logs/classLevelLogs/className
+
+        Path targetPath = Paths.get(relativePath);
+        Path methodLevelogFilePath = targetPath.resolve(methodName + ".logs");
+        try {
+            Files.createDirectories(targetPath);
+            Files.writeString(
+                    methodLevelogFilePath,          // The file path object
+                    testLogs,             // The string content
+                    StandardCharsets.UTF_8 // Ensure consistent encoding
+            );
+        } catch (IOException e) {
+            System.err.println("Failed to create directories due to an I/O error: " + e.getMessage());
+        }
+
+
     }
     // Unused methods required by ITestListener interface
     @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}

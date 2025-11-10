@@ -14,12 +14,12 @@ import static core.wait.WaitUtil.staticWait;
 
 public class TC01 extends TestBaseAppUtil {
 
-   // private final Logger log = LogManager.getLogger(TC01.class);
+    //private final Logger log = LogManager.getLogger(TC01.class);
 
     @BeforeClass
     public void setup()
     {
-        DriverManager.getDriver();
+       // DriverManager.getDriver();
         Logger classLog= LogManager.getLogger("TC01");
         classLog.info("End to end start\n");
     }
