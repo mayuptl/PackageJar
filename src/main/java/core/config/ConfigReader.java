@@ -3,20 +3,16 @@ package core.config;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
+
+// IMPORTANT: This import allows ConfigReader to use your robust Config class.
 
 /**
  * Utility class for reading configuration properties from various sources.
- * It supports two main modes of operation:
- * * 1. **Cached Access (get...Prop):** Reads the core 'config.properties' file once on
- * startup, merging defaults from the JAR with overrides from the external classpath.
- * 2. **File System Access (get...PropFromPath):** Reads properties ad-hoc from a
- * specified file path every time the method is called, for specific, non-core configs.
+ * It now relies entirely on the separate 'Config' class for robust, merged
+ * property loading via the Thread Context ClassLoader (TCCL).
  */
 public final class ConfigReader {
-    // We use the same name for the resource inside the JAR and the consumer override
-    private static final String RESOURCE_PATH = "config.properties";
 
     // Static instance to hold the merged properties, loaded only once
     private static final Properties CACHED_PROPS = new Properties();
@@ -25,6 +21,7 @@ public final class ConfigReader {
     static {
         loadMergedProperties();
     }
+
     /**
      * Private constructor to prevent external instantiation of this utility class.
      */
@@ -33,48 +30,28 @@ public final class ConfigReader {
     }
 
     /**
-     * Loads the core properties with the correct merging priority:
-     * 1. Load the default properties from INSIDE the current JAR (lower priority).
-     * 2. Overlay those defaults with the properties from the external consumer classpath (higher priority).
-     * The result is stored in the static CACHED_PROPS object.
+     * LOADS the core properties with the correct merging priority by delegating
+     * the robust loading and merging process entirely to the 'Config' class.
+     * * THIS IS THE MAIN CHANGE: We call Config.getApplicationProperties()
      */
     private static void loadMergedProperties() {
-        // --- STEP 1: Load JAR Defaults (Lowest Priority) ---
-        // We use ConfigReader.class.getResourceAsStream to specifically look inside the current JAR.
-        //System.out.println("DEBUG: loadMergedProperties() called by: " + Thread.currentThread().getStackTrace()[3]);
-        try (InputStream defaultsStream = ConfigReader.class.getResourceAsStream("/" + RESOURCE_PATH)) {
-            if (defaultsStream != null) {
-                CACHED_PROPS.load(defaultsStream);
-              //  System.out.println("INFO: Loaded default properties from inside JAR.");
-            }
-        } catch (IOException e) {
-            // Log this, but it shouldn't stop the application if the config file is missing inside the JAR.
-            System.err.println("WARNING: Failed to load default config from inside JAR: " + e.getMessage());
+        // 1. DELEGATE LOADING: Call the robust loading method from the 'Config' class
+        Properties loadedProps = Config.getApplicationProperties();
+
+        if (loadedProps == null || loadedProps.isEmpty()) {
+            System.err.println("FATAL: Could not load any properties. Check 'Config' class for errors.");
+            return;
         }
 
-        // --- STEP 2: Load Consumer Overrides (Highest Priority) ---
-        // We use the Thread Context ClassLoader to find the file on the external classpath.
-        // If found, it overwrites existing keys in CACHED_PROPS.
-        try (InputStream overrideStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(RESOURCE_PATH)) {
-            if (overrideStream != null) {
-                Properties overrideProps = new Properties();
-                overrideProps.load(overrideStream);
+        // 2. CACHE: Store the robustly loaded and merged properties
+        CACHED_PROPS.putAll(loadedProps);
+        System.out.println("INFO: ConfigReader initialized successfully with " + CACHED_PROPS.size() + " properties.");
 
-                // Merge the overrides into the cached properties, consumer keys will overwrite defaults
-                CACHED_PROPS.putAll(overrideProps);
-                //System.out.println("INFO: Overlaid properties with consumer config from classpath.");
-            }
-            // --- STEP 3: Map Config Keys to Log4j System Properties (Simplified) ---
-            // This process MUST happen before Log4j reads its configuration file.
-            // 1. Map LOG_FILE_DIR (Config Key) to log4j2.logDir (System Property Key)
-            injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
-            // 2. Map LOG_FILE_NAME (Config Key) to log4j2.fileName (System Property Key)
-            injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
-        } catch (IOException e) {
-            // This is acceptable; no consumer override file was found.
-            System.out.println("INFO: No consumer config.properties file found on external classpath. Using defaults.");
-        }
+        // --- STEP 3: Map Config Keys to Log4j System Properties (Simplified) ---
+        injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
+        injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
     }
+
     /**
      * Helper method to map a configuration key's value to a system property key,
      * but only if the system property has not been set externally.
@@ -87,13 +64,9 @@ public final class ConfigReader {
         if (configValue != null && System.getProperty(systemPropertyKey) == null) {
             // Case 1: Config key found, System Property NOT set -> SET IT
             System.setProperty(systemPropertyKey, configValue);
-            //System.out.println("INFO: Set Log4j System Property " + systemPropertyKey + " = " + configValue);
-        } else if (System.getProperty(systemPropertyKey) != null) {
-            // Case 2: System Property already set externally -> KEEP EXISTING VALUE
-          //  System.out.println("INFO: System Property " + systemPropertyKey + " already set externally. Keeping existing value.");
-        } else {
+        } else if (System.getProperty(systemPropertyKey) == null) {
             // Case 3: Config key not found -> WARN
-            System.err.println("Configuration key '" + configKey + "' not found in config.properties.");
+            System.err.println("Configuration key '" + configKey + "' not found in config.properties for system property mapping.");
         }
     }
 
@@ -185,8 +158,6 @@ public final class ConfigReader {
      */
     public static boolean getBoolProp(String key) {
         // getStrProp(key) handles missing or empty keys by throwing a RuntimeException.
-        // Boolean.parseBoolean is very forgiving (only "true" is true), so we don't
-        // need extra number format handling.
         String value = getStrProp(key);
         return Boolean.parseBoolean(value.trim());
     }
@@ -342,5 +313,4 @@ public final class ConfigReader {
         String value = getStrPropFromPath(key, filePath, String.valueOf(defaultValue));
         return Boolean.parseBoolean(value.trim());
     }
-
 }

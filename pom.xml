@@ -5,7 +5,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>3.5.8-SNAPSHOT</version>
+    <version>3.6.0-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
@@ -14,7 +14,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- DEFINITIVE JAVA TARGET VERSION -->
         <java.target.version>17</java.target.version>
-        <!-- Removed redundant compiler source/target properties since we now use the <release> tag below -->
     </properties>
 
     <dependencies>
@@ -101,7 +100,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
             <version>2.0.16</version>
-           <!-- <scope>provided</scope>-->
+            <!-- <scope>provided</scope>-->
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
@@ -138,13 +137,10 @@
                                     <artifact>*:*</artifact> <!-- Apply to all dependencies -->
                                     <excludes>
                                         <!-- Exclude all common logging configuration files -->
-                                       <!-- <exclude>log4j2.xml</exclude>
-                                        <exclude>log4j2.properties</exclude>-->
                                         <exclude>log4j.xml</exclude>
                                         <exclude>log4j.properties</exclude>
                                         <exclude>simplelogger.properties</exclude>
                                         <!-- EXCLUDED: Prevents conflict with consumer's configuration -->
-                                        <exclude>config.properties</exclude>
                                         <!-- Exclude security signatures -->
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
@@ -202,18 +198,6 @@
                                     <pattern>com.aventstack</pattern>
                                     <shadedPattern>org.example.apputils.shaded.extentreports</shadedPattern>
                                 </relocation>
-                               <!-- <relocation>
-                                    <pattern>org.slf4j</pattern>
-                                    <shadedPattern>org.example.apputils.shaded.slf4j-nop</shadedPattern>
-                                </relocation>-->
-                                <!--<relocation>
-                                    <pattern>org.apache.logging.log4j</pattern>
-                                    <shadedPattern>org.example.apputils.shaded.log4j-core</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.apache.logging.log4j</pattern>
-                                    <shadedPattern>org.example.apputils.shaded.log4j-api</shadedPattern>
-                                </relocation>-->
                                 <relocation>
                                     <pattern>org.apache.hc.client5</pattern>
                                     <shadedPattern>org.example.apputils.shaded.httpclient5</shadedPattern>
@@ -237,25 +221,24 @@
                 </configuration>
             </plugin>
             <!-- 2. Javadoc Plugin (Attaches Documentation) -->
-                      <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>3.6.3</version>
-                            <configuration>
-                                <docfilessubdirs>true</docfilessubdirs>
-                                <failOnError>false</failOnError>
-                                <!--<skip>true</skip>-->
-                                <doclint>none</doclint>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>attach-javadocs</id>
-                                    <goals>
-                                        <goal>jar</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <docfilessubdirs>true</docfilessubdirs>
+                    <failOnError>false</failOnError>
+                    <doclint>none</doclint>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -275,6 +258,41 @@
                 <forkCount>1</forkCount>
                 <reuseForks>false</reuseForks>
             </configuration>
+            </plugin>
+            <plugin>
+                <!-- Used to include files outside of the standard src/main/resources -->
+                <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-resources-plugin -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version> <!-- Use a recent version -->
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <!-- CHANGED PHASE: Use process-resources for resource copying -->
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 1. Define the output directory inside the final JAR -->
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <!-- 2. Set the directory where your config.properties CURRENTLY lives -->
+                                    <directory>${project.basedir}/src/main/resources</directory>
+                                    <!-- CRITICAL FIX: Disable filtering to prevent corruption of property files -->
+                                    <filtering>false</filtering>
+                                    <includes>
+                                        <!-- 3. Specify the file name -->
+                                        <include>config.properties</include>
+                                    </includes>
+                                    <!-- 4. Target path for the file (empty means JAR root) -->
+                                    <targetPath></targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
