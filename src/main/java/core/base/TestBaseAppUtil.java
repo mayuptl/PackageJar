@@ -1,5 +1,6 @@
 package core.base;
 
+import core.config.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import managers.DriverManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -27,6 +28,12 @@ import static core.config.ConfigReader.getStrProp;
  * This class provides methods to launch the application using different configurations.
  */
 public class TestBaseAppUtil {
+    // This static block executes once, when the JVM first loads BaseTest.
+    // It guarantees configuration and Log4j system properties are set BEFORE
+    // any test methods, or Log4j itself, try to run.
+    static {
+        ConfigReader.initialize();
+    }
     /**
      * The WebDriver instance for the current test thread.
      * This field is often synchronized with the driver managed by {@code DriverManager}.

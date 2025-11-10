@@ -1,61 +1,81 @@
 package core.config;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.Properties;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * Provides robust, single-instance loading and merging of configuration properties.
+ *
+ * Merging Priority (Consumer overrides JAR):
+ * 1. Default properties inside the JAR (base config) are loaded first.
+ * 2. User's local properties (file system override) are loaded and merged second.
+ */
 public class Config {
-    private static final String RESOURCE_NAME = "config.properties";
-    // Store properties once loaded and merged
-    private static Properties appProperties;
-    /**
-     * Initializes and returns the final, merged application properties.
-     * Merging order: Defaults (inside JAR) are overlaid by Overrides (external classpath).
-     * This method ensures the TCCL (Thread Context ClassLoader) is used for the overrides,
-     * which fixes issues in shaded/consumer environments.
-     * * @return The merged Properties object, or an empty Properties object if loading fails.
-     */
-    public static Properties getApplicationProperties() {
-        if (appProperties == null) {
-            appProperties = loadAndMergeProperties();
-        }
-        return appProperties;
+
+    // File names and expected paths
+    private static final String DEFAULT_CONFIG_FILE = "config.properties"; // Inside JAR
+    private static final String LOCAL_OVERRIDE_FILE = "src/main/resources/config.properties"; // Local file system (Consumer's project root)
+
+    // Using AtomicReference to hold the single, immutable instance of merged properties
+    private static final AtomicReference<Properties> MERGED_PROPERTIES = new AtomicReference<>();
+
+    private Config() {
+        // Prevent instantiation
     }
 
     /**
-     * Performs the robust loading and merging of default and override configurations.
+     * Public accessor to retrieve the application properties, loading them if necessary.
+     * This method ensures thread-safe, one-time loading.
+     *
+     * @return The merged Properties object.
      */
-    private static Properties loadAndMergeProperties() {
+    public static Properties getApplicationProperties() {
+        if (MERGED_PROPERTIES.get() == null) {
+            loadAndMergeProperties();
+        }
+        return MERGED_PROPERTIES.get();
+    }
+
+    /**
+     * Handles the core loading and merging logic.
+     */
+    private static void loadAndMergeProperties() {
         Properties mergedProps = new Properties();
-        // --- 1. Load Defaults (Lowest Priority) ---
-        // Use Config.class.getResourceAsStream to reliably find the resource *inside* this JAR.
-        try (InputStream defaultsStream = Config.class.getResourceAsStream("/" + RESOURCE_NAME)) {
-            if (defaultsStream != null) {
-                mergedProps.load(defaultsStream);
-                System.out.println("INFO: Loaded default properties from inside JAR.");
+
+        // 1. Load DEFAULT properties from the JAR (Classpath) - BASE
+        try (InputStream jarStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(DEFAULT_CONFIG_FILE)) {
+            if (jarStream != null) {
+                mergedProps.load(jarStream);
+                System.out.println("INFO: Loaded " + mergedProps.size() + " default properties from JAR: " + DEFAULT_CONFIG_FILE);
             } else {
-                System.out.println("WARN: Default " + RESOURCE_NAME + " not found inside JAR.");
+                System.err.println("WARNING: Default config file not found in JAR: " + DEFAULT_CONFIG_FILE);
             }
         } catch (IOException e) {
-            System.err.println("WARNING: Failed to read default properties from JAR: " + e.getMessage());
+            System.err.println("FATAL: Error loading properties from JAR: " + DEFAULT_CONFIG_FILE);
+            e.printStackTrace();
         }
-        // --- 2. Load Overrides (Highest Priority) using TCCL ---
-        // Use TCCL to find the override file on the external classpath (consumer project).
-        try (InputStream overrideStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(RESOURCE_NAME)) {
-            if (overrideStream != null) {
-                Properties overrideProps = new Properties();
-                overrideProps.load(overrideStream);
-                // Merge the overrides into the defaults. Overrides win.
-                mergedProps.putAll(overrideProps);
-                System.out.println("INFO: Overlaid properties with consumer config from external classpath (TCCL).");
-            } else {
-                System.out.println("INFO: No consumer " + RESOURCE_NAME + " file found on external classpath. Using defaults only.");
-            }
+
+        // 2. Load OVERRIDE properties from the local file system (Consumer project) - OVERRIDE
+        try (FileInputStream localStream = new FileInputStream(LOCAL_OVERRIDE_FILE)) {
+            Properties overrideProps = new Properties();
+            overrideProps.load(localStream);
+
+            // Override JAR properties with local properties
+            mergedProps.putAll(overrideProps);
+            System.out.println("INFO: Successfully applied " + overrideProps.size() + " local properties from file system. Final count: " + mergedProps.size());
+        } catch (FileNotFoundException e) {
+            // This is acceptable, the local override file is optional.
+            System.out.println("INFO: No local override file found at: " + LOCAL_OVERRIDE_FILE + ". Using JAR defaults only.");
         } catch (IOException e) {
-            // This is acceptable; no consumer override file was found, or an error occurred during read.
-            System.err.println("WARNING: Error reading consumer override properties: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("FATAL: General error during override resource loading: " + e.getMessage());
+            System.err.println("ERROR: Error loading properties from local override file: " + LOCAL_OVERRIDE_FILE);
+            e.printStackTrace();
         }
-        return mergedProps;
+
+        // Finalize the merged properties (thread-safe assignment)
+        MERGED_PROPERTIES.compareAndSet(null, mergedProps);
     }
 }
