@@ -5,15 +5,14 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>4.0.6-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- DEFINITIVE JAVA TARGET VERSION -->
-        <java.target.version>17</java.target.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -157,18 +156,23 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <!-- Merge all NOTICE and LICENSE files (both .txt and non-.txt versions) instead of dropping/overwriting -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/NOTICE</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/LICENSE</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/NOTICE.txt</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/LICENSE.txt</resource>
                                 </transformer>
                             </transformers>
@@ -198,6 +202,18 @@
                                     <pattern>com.aventstack</pattern>
                                     <shadedPattern>org.example.apputils.shaded.extentreports</shadedPattern>
                                 </relocation>
+                                <!-- <relocation>
+                                     <pattern>org.slf4j</pattern>
+                                     <shadedPattern>org.example.apputils.shaded.slf4j-nop</shadedPattern>
+                                 </relocation>-->
+                                <!--<relocation>
+                                    <pattern>org.apache.logging.log4j</pattern>
+                                    <shadedPattern>org.example.apputils.shaded.log4j-core</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.logging.log4j</pattern>
+                                    <shadedPattern>org.example.apputils.shaded.log4j-api</shadedPattern>
+                                </relocation>-->
                                 <relocation>
                                     <pattern>org.apache.hc.client5</pattern>
                                     <shadedPattern>org.example.apputils.shaded.httpclient5</shadedPattern>
@@ -244,55 +260,20 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <!-- Compiling and targeting Java 17 LTS release standards -->
-                    <release>${java.target.version}</release>
+                    <release>16</release>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.3</version> <configuration>
-                <suiteXmlFiles>
-                    <suiteXmlFile>testng.xml</suiteXmlFile>
-                </suiteXmlFiles>
-                <forkCount>1</forkCount>
-                <reuseForks>false</reuseForks>
-            </configuration>
-            </plugin>
-            <plugin>
-                <!-- Used to include files outside of the standard src/main/resources -->
-                <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-resources-plugin -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version> <!-- Use a recent version -->
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <!-- CHANGED PHASE: Use process-resources for resource copying -->
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <!-- 1. Define the output directory inside the final JAR -->
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <!-- 2. Set the directory where your config.properties CURRENTLY lives -->
-                                    <directory>${project.basedir}/src/main/resources</directory>
-                                    <!-- CRITICAL FIX: Disable filtering to prevent corruption of property files -->
-                                    <filtering>false</filtering>
-                                    <includes>
-                                        <!-- 3. Specify the file name -->
-                                        <include>config.properties</include>
-                                    </includes>
-                                    <!-- 4. Target path for the file (empty means JAR root) -->
-                                    <targetPath></targetPath>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
+                <version>3.2.3</version>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                </configuration>
             </plugin>
         </plugins>
     </build>

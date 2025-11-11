@@ -87,21 +87,6 @@ public class ExtentLogAttachListeners implements ITestListener {
         return ThreadContext.get("driverId");
     }
     /**
-     * Extracts test case logs and attaches them to the Extent Report as formatted HTML.
-     * (NOTE: LogExtractorUtil.toGetTestCaseLogs() must be implemented elsewhere)
-     * @param test The current ExtentTest node.
-     * @param methodName The name of the currently executing test method.
-     */
-    private void attachLogs(ExtentTest test,String methodName,ITestResult result)  {
-        String driverID = getDriverIdFromContext();
-        String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
-        String styledLogs=
-                "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
-                        + testLogs + "</pre></div>";
-        test.info(styledLogs);
-        createClassLevelLogsFolder(testLogs,result);
-    }
-    /**
      * Captures a screenshot and adds it to the Extent Report test node.
      * @param test The current ExtentTest node.
      */
@@ -115,6 +100,21 @@ public class ExtentLogAttachListeners implements ITestListener {
         }else {
             System.err.println("Driver is null. failed to attached screenshot");
         }
+    }
+    /**
+     * Extracts test case logs and attaches them to the Extent Report as formatted HTML.
+     * (NOTE: LogExtractorUtil.toGetTestCaseLogs() must be implemented elsewhere)
+     * @param test The current ExtentTest node.
+     * @param methodName The name of the currently executing test method.
+     */
+    private void attachLogs(ExtentTest test,String methodName,ITestResult result)  {
+        String driverID = getDriverIdFromContext();
+        String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
+        String styledLogs=
+                "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
+                        + testLogs + "</pre></div>";
+        test.info(styledLogs);
+        createClassLevelLogsFolder(testLogs,result);
     }
     public void createClassLevelLogsFolder(String testLogs,ITestResult result)
     {
@@ -136,8 +136,6 @@ public class ExtentLogAttachListeners implements ITestListener {
         } catch (IOException e) {
             System.err.println("Failed to create directories due to an I/O error: " + e.getMessage());
         }
-
-
     }
     // Unused methods required by ITestListener interface
     @Override public void onTestFailedButWithinSuccessPercentage(ITestResult result) {}

@@ -1,15 +1,14 @@
 package core.excel;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+
 /**
  * Utility class for reading test data from Excel (.xlsx) files using Apache POI.
  * This class is designed to retrieve data based on a unique test case identifier found
@@ -141,25 +140,28 @@ public class ExcelReader {
      * }
      * </pre>
      */
-    public List<String> getTestInput(String excelFilePath, String sheetName, String testCaseName) throws IOException {
-        Workbook workbook;
-        // 1. Try-with-resources for automatic closing of FileInputStream
-        try (FileInputStream fis = new FileInputStream(excelFilePath)) {
-            workbook = new XSSFWorkbook(fis);
+    public List<String> getTestInput(String excelFilePath, String sheetName, String testCaseName) throws IOException
+    {
+        try (FileInputStream fis = new FileInputStream(excelFilePath);
+             Workbook workbook = excelFilePath.endsWith(".xlsx") ? new XSSFWorkbook(fis) : new HSSFWorkbook(fis)) {
+            // 2. Error Check: Sheet existence
+            Sheet sheet = workbook.getSheet(sheetName);
+            if (sheet == null) {
+                throw new NoSuchElementException("Sheet '" + sheetName + "' not found in the workbook: " + excelFilePath);
+            }
+            // 3. Checking total rows count
+            int totalRows = sheet.getLastRowNum();
+            if (totalRows < 0) {
+                throw new IllegalStateException("Empty rows found in the sheet: '" + sheetName + "'. Cannot proceed without data.");
+            }
+            // 4. Loop through rows to find the test case
+            Row row = validateTestCaseExists(sheet, testCaseName);
+            return extractRowData(row);
+        } catch (IOException | NoSuchElementException | IllegalStateException e)
+        {
+            e.printStackTrace();
+            return Collections.emptyList(); // Prevent termination
         }
-        // 2. Error Check: Sheet existence
-        Sheet sheet = workbook.getSheet(sheetName);
-        if (sheet == null) {
-            throw new NoSuchElementException("Sheet '" + sheetName + "' not found in the workbook: " + excelFilePath);
-        }
-        // 3. Checking total rows count
-        int totalRows = sheet.getLastRowNum();
-        if (totalRows < 0) {
-            throw new IllegalStateException("Empty rows found in the sheet: '" + sheetName + "'. Cannot proceed without data.");
-        }
-        // 4. Loop through rows to find the test case
-        Row row = validateTestCaseExists(sheet, testCaseName);
-        return extractRowData(row);
     }
     /**
      * Iterates through the sheet to find the row matching the test case name in column 0.

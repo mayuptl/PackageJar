@@ -12,7 +12,15 @@ import org.openqa.selenium.WebDriver;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+
+import static core.config.ConfigReader.getStrProp;
 import static core.screenshot.ScreenshotUtil.getBase64Screenshot;
 import static core.video.GetVideoFilePath.toGetVideoFilePath;
 
@@ -61,7 +69,7 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         stopAndAttachVideo(test, methodName);
         /* attachScreenshot(test,driver);*/
-        attachLogs(test,methodName);
+        attachLogs(test,methodName,result);
         ExtentManager.removeTest();
     }
 
@@ -71,7 +79,7 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
         String methodName = result.getMethod().getMethodName();
         stopAndAttachVideo(test, methodName);
         attachScreenshot(test);
-        attachLogs(test,methodName);
+        attachLogs(test,methodName,result);
         test.fail(result.getThrowable());
         ExtentManager.removeTest(); // ThreadLocal cleanup
     }
@@ -93,14 +101,35 @@ public class ExtentVideoLogAttachListeners implements ITestListener {
     private String getDriverIdFromContext() {
         return ThreadContext.get("driverId");
     }
-    private void attachLogs(ExtentTest test,String methodName)
-    {
+    private void attachLogs(ExtentTest test,String methodName,ITestResult result)  {
         String driverID = getDriverIdFromContext();
         String testLogs=LogExtractorUtil.toGetTestCaseLogs(methodName,driverID);
         String styledLogs=
                 "<div style='overflow-x:auto;'><pre style='white-space: pre-wrap; word-break: break-word;'>"
                         + testLogs + "</pre></div>";
         test.info(styledLogs);
+        createClassLevelLogsFolder(testLogs,result);
+    }
+    public void createClassLevelLogsFolder(String testLogs,ITestResult result)
+    {
+        String className = result.getTestClass().getRealClass().getSimpleName();
+        String methodName = result.getMethod().getMethodName();
+        String logDir=getStrProp("LOG_FILE_DIR"); //execution-output/test-logs
+        String folderPathString = logDir +"/class-level-logs"; //execution-output/test-logs/class-level-logs
+        String relativePath = folderPathString +"/"+ className; //execution-output/test-logs/classLevelLogs/className
+
+        Path targetPath = Paths.get(relativePath);
+        Path methodLevelogFilePath = targetPath.resolve(methodName + ".logs");
+        try {
+            Files.createDirectories(targetPath);
+            Files.writeString(
+                    methodLevelogFilePath,          // The file path object
+                    testLogs,             // The string content
+                    StandardCharsets.UTF_8 // Ensure consistent encoding
+            );
+        } catch (IOException e) {
+            System.err.println("Failed to create directories due to an I/O error: " + e.getMessage());
+        }
     }
     /** Stops the recorder, attaches the video link to the report, and cleans up Recorder ThreadLocal. */
     private void stopAndAttachVideo(ExtentTest test, String methodName) {

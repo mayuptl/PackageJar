@@ -58,7 +58,7 @@ public class TC03 extends TestBaseAppUtil {
      @Test
     public void ttt()
     {
-       String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_PATH","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
+       String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_DIR","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
        System.out.println(DEFAULT_REPORT_PATH);
     }
 }

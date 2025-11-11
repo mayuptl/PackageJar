@@ -17,7 +17,7 @@ import static core.config.ConfigReader.getStrProp;
  */
 public class ExtentManager {
     private static ExtentReports extent;
-    private static final String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_PATH","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
+    private static final String DEFAULT_REPORT_PATH = getStrProp("EXTENT_REPORT_DIR","execution-output/test-reports/")+getStrProp("REPORT_NAME","ExtentReport.html");
     private static final ThreadLocal<ExtentTest> currentTest = new ThreadLocal<>();
     private static final Map<String,ExtentTest> classNodeMap = new ConcurrentHashMap<>();
     /**

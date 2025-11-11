@@ -14,8 +14,6 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariOptions;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -28,12 +26,6 @@ import static core.config.ConfigReader.getStrProp;
  * This class provides methods to launch the application using different configurations.
  */
 public class TestBaseAppUtil {
-    // This static block executes once, when the JVM first loads BaseTest.
-    // It guarantees configuration and Log4j system properties are set BEFORE
-    // any test methods, or Log4j itself, try to run.
-    static {
-        ConfigReader.initialize();
-    }
     /**
      * The WebDriver instance for the current test thread.
      * This field is often synchronized with the driver managed by {@code DriverManager}.
@@ -120,7 +112,6 @@ public class TestBaseAppUtil {
      * @throws IllegalArgumentException If the specified browser name is not supported (e.g., "opera").
      */
     private WebDriver initDriverCore(String BrowserName, String driverPath, String customOptions) {
-        getStrProp("BROWSER"); // safe entry point to load .properties value which will set log4j2 log file path
         WebDriver driver;
         // Map to hold preferences (for Chrome, Edge, Firefox)
         Map<String, Object> prefs = new HashMap<>();

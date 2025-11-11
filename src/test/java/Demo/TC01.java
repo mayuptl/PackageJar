@@ -13,9 +13,6 @@ import org.testng.annotations.Test;
 import static core.wait.WaitUtil.staticWait;
 
 public class TC01 extends TestBaseAppUtil {
-
-    //private final Logger log = LogManager.getLogger(TC01.class);
-
     @BeforeClass
     public void setup()
     {

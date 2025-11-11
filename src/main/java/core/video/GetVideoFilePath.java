@@ -16,7 +16,7 @@ public class GetVideoFilePath {
      * The default folder path where video recordings are expected to be stored.
      * Safely defaults to {@code execution-output/test-recordings/} if the configuration key is missing.
      */
-    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("TEST_RECORDINGS", "execution-output/test-recordings/");
+    private static final String DEFAULT_VIDEO_FOLDER = getStrProp("TEST_RECORDINGS_DIR", "execution-output/test-recordings/");
     private static final String DEFAULT_VIDEO_EXTENSION = ".avi";
     /**
      * Extracts the file path for the video recording of a test case using the default video folder
@@ -72,8 +72,7 @@ public class GetVideoFilePath {
                     Path filepath = Paths.get(file.getAbsolutePath());
                     // file.toUri().toString() correctly handles protocol and slashes for all OS
                     String formattedPath = filepath.toUri().toString();
-                    String linkText = "Execution Video"; //Execution Video
-                    //testCaseName
+                   // String linkText = "Execution Video"; //Execution Video
                     // Return the HTML anchor tag
                     return "<a href=\"" + formattedPath + "\" target=\"_blank\">" + testCaseName + "</a>";
                 }

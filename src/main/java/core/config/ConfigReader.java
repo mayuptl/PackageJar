@@ -1,80 +1,69 @@
 package core.config;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
-/**
- * Utility class for reading configuration properties from various sources.
- * It caches the merged properties (JAR defaults + Consumer overrides)
- * loaded by the internal 'Config' class.
- *
- * NOTE: The public 'initialize()' method MUST be called by the consumer project
- * early in the test lifecycle (e.g., in a static block of the base test class)
- * to set critical system properties (like Log4j paths) before the Log4j framework initializes.
- */
-public final class ConfigReader {
-
+public class ConfigReader {
     // Static instance to hold the merged properties, loaded only once
     private static final Properties CACHED_PROPS = new Properties();
-    private static volatile boolean isInitialized = false;
-
-    /**
-     * Private constructor to prevent external instantiation of this utility class.
-     */
-    private ConfigReader() {}
-
-    // Static block to trigger the initial attempt at loading the properties.
+    // Static block to initialize the properties when the class is loaded
     static {
         loadMergedProperties();
     }
-
     /**
-     * Loads the core properties by delegating the merging process to the 'Config' class.
-     * This method is idempotent and ensures the properties are loaded once.
+     * Loads the properties with the correct merging priority:
+     * 1. Load the default properties from INSIDE the current JAR (lower priority).
+     * 2. Overlay those defaults with the properties from the external consumer classpath (higher priority).
+     * The result is stored in the static CACHED_PROPS object.
      */
     private static void loadMergedProperties() {
-        if (isInitialized) return;
-
-        // 1. DELEGATE LOADING: Call the robust loading method from the 'Config' class
-        // This handles loading JAR defaults and overriding with consumer's local file.
-        Properties loadedProps = Config.getApplicationProperties();
-
-        if (loadedProps == null || loadedProps.isEmpty()) {
-            System.err.println("FATAL: Could not load any properties. Check 'Config' class for errors.");
-            return;
+        InputStream defaultsStream = null;
+        for (int i = 0; i < 2; i++) {
+            try {
+                defaultsStream = ConfigReader.class.getResourceAsStream("/default-config.properties");
+                if (defaultsStream != null) {
+                    CACHED_PROPS.load(defaultsStream);
+                    //System.out.println("INFO: Loaded default-config.properties from inside JAR.\n");
+                    break;
+                } else {
+                    System.err.println("WARNING: default-config.properties not found inside JAR (attempt " + (i + 1) + ")");
+                }
+            } catch (IOException e) {
+                System.err.println("WARNING: Failed to load default-config.properties from inside JAR (attempt " + (i + 1) + ")");
+            }
         }
-
-        // 2. CACHE: Store the robustly loaded and merged properties
-        CACHED_PROPS.putAll(loadedProps);
-        isInitialized = true;
-    }
-
-    /**
-     * Public method to ensure configuration is loaded and critical system properties
-     * (like Log4j settings) are set BEFORE Log4j attempts to initialize.
-     *
-     * IMPORTANT: This MUST be called by the consumer project at the very start
-     * of their execution (e.g., in a static block of their base test class).
-     */
-    public static void initialize() {
-        if (!isInitialized) {
-            loadMergedProperties();
+        //Step 2 : Load consumer properties
+        try (InputStream overrideStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties")) {
+            if (overrideStream != null) {
+                Properties overrideProps = new Properties();
+                overrideProps.load(overrideStream);
+                for (String key : overrideProps.stringPropertyNames()) {
+                    String defaultValue = CACHED_PROPS.getProperty(key);
+                    String overrideValue = overrideProps.getProperty(key);
+                    if (defaultValue != null && !defaultValue.equals(overrideValue)) {
+                        System.out.printf("%n");
+                        System.out.printf("INFO: User's config.properties value overrides JAR's value as belwo:%n");
+                        System.out.printf("%s :(New value) %s | (Old value): %s %n", key, overrideValue, defaultValue);
+                    }
+                }
+                CACHED_PROPS.putAll(overrideProps);
+            }
+        } catch (IOException e) {
+            System.out.println("INFO: Using default values because no config.properties file found or no keys match with JAR's default-config.properties file keys");
         }
-
-        // --- Inject Config Keys to Log4j System Properties (Crucial Fix for Log4j ERROR) ---
-        // This is necessary because Log4j starts before the properties file is guaranteed to be read.
         injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
         injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
-
-        System.out.println("INFO: ConfigReader initialization complete. Log4j system properties set.");
+       //System.out.println("INFO: ConfigReader initialization complete. Log4j system properties set.");
     }
-
     /**
      * Helper method to map a configuration key's value to a system property key,
      * but only if the system property has not been set externally.
      */
     private static void injectSystemProperty(String configKey, String systemPropertyKey) {
         final String configValue = CACHED_PROPS.getProperty(configKey);
-
         // Only set the System Property if it hasn't been set yet
         if (System.getProperty(systemPropertyKey) == null) {
             if (configValue != null) {
@@ -85,22 +74,9 @@ public final class ConfigReader {
             }
         }
     }
-
-    // ====================================================================
-    // Remaining Config Access Methods
-    // ====================================================================
-
     /**
-     * Retrieves a property value by key from the merged configuration cache.
-     * Returns null if the key is not found.
-     */
-    public static String getProperty(String key) {
-        return CACHED_PROPS.getProperty(key);
-    }
-
-    /**
-     * Retrieves a property value by key, throwing a RuntimeException if the value
-     * is missing or empty, as it is considered mandatory.
+     * Get a String property value. Throws RuntimeException if the key is missing.
+     * Use this for MANDATORY properties.
      */
     public static String getStrProp(String key) {
         String value = CACHED_PROPS.getProperty(key);
@@ -111,29 +87,10 @@ public final class ConfigReader {
     }
 
     /**
-     * Retrieves a property value as an integer.
-     */
-    public static int getIntProp(String key) {
-        String value = getStrProp(key);
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            throw new RuntimeException("❌ Property '" + key + "' is not a valid integer: " + value, e);
-        }
-    }
-
-    /**
-     * Retrieves a property value as a boolean.
-     */
-    public static boolean getBooleanProp(String key) {
-        String value = getStrProp(key);
-        return Boolean.parseBoolean(value);
-    }
-
-    /**
      * Get a String property value, falling back to a default if the key is missing.
      * Use this for OPTIONAL properties.
-     * @param key The property key to look up.
+     *
+     * @param key          The property key to look up.
      * @param defaultValue The value to return if the key is missing or empty.
      * @return The property value or the default value.
      */
@@ -144,7 +101,19 @@ public final class ConfigReader {
         }
         return value.trim();
     }
-
+    /**
+     * Get an integer property value. Throws RuntimeException if the key is missing
+     * or the parsed value is invalid.
+     * Use this for MANDATORY properties.
+     */
+    public static int getIntProp(String key) {
+        String value = getStrProp(key); // Will throw RuntimeException if key is missing/empty
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("❌ Invalid integer value for mandatory key: " + key + " -> " + value, e);
+        }
+    }
     /**
      * Get an integer property value safely, using a default value if the key is missing
      * or the parsed value is invalid.
@@ -152,7 +121,6 @@ public final class ConfigReader {
      */
     public static int getIntProp(String key, int defaultValue) {
         String value = getStrProp(key, String.valueOf(defaultValue));
-
         try {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException e) {
@@ -160,6 +128,15 @@ public final class ConfigReader {
             System.err.println("ERROR: Invalid integer format for key: " + key + " -> " + value + ". Using default value: " + defaultValue);
             return defaultValue;
         }
+    }
+
+    /**
+     * Get a boolean property value. Throws RuntimeException if the key is missing.
+     * Use this for MANDATORY properties.
+     */
+    public static boolean getBoolProp(String key) {
+        String value = getStrProp(key);
+        return Boolean.parseBoolean(value.trim());
     }
     /**
      * Get a boolean property value safely, using a default value if the key is missing.
@@ -171,14 +148,61 @@ public final class ConfigReader {
     }
 
     /**
-     * Get a boolean property value. Throws RuntimeException if the key is missing.
-     * Use this for MANDATORY properties.
+     * Helper to read properties from a project-level directory (File System).
+     * The path is resolved relative to the directory where the JVM process starts (usually project root).
+     *
+     * @param filePath The relative path from the project root (e.g., "test-config/default-config.properties").
+     * @return The loaded Properties object.
      */
-    public static boolean getBoolProp(String key) {
-        // getStrProp(key) handles missing or empty keys by throwing a RuntimeException.
-        // Boolean.parseBoolean is very forgiving (only "true" is true), so we don't
-        // need extra number format handling.
-        String value = getStrProp(key);
+    private static Properties loadFromFileSystem(String filePath) throws IOException {
+        Properties props = new Properties();
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            props.load(fis);
+        } catch (FileNotFoundException e) {
+            throw new IOException("❌ Config file not found: " + filePath +
+                    "\n➡ Ensure the path is correct and the file exists.", e);
+        } catch (IOException e) {
+            throw new IOException("❌ Failed to load config file: " + filePath, e);
+        }
+        return props;
+    }
+
+    /**
+     * Reads a String property safely from a given file path.
+     */
+    public static String getStrPropFromPath(String key, String filePath) {
+        try {
+            Properties prop = loadFromFileSystem(filePath);
+            String value = prop.getProperty(key);
+
+            if (value == null || value.trim().isEmpty()) {
+                throw new RuntimeException("❌ Missing or empty property for key: " + key +
+                        " in file: " + filePath);
+            }
+            return value.trim();
+        } catch (IOException e) {
+            throw new RuntimeException("❌ Unable to read property file: " + filePath, e);
+        }
+    }
+
+    /**
+     * Reads an integer property from a given file path.
+     */
+    public static int getIntPropFromPath(String key, String filePath) {
+        String value = getStrPropFromPath(key, filePath);
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("❌ Invalid integer value for key: " + key +
+                    " in file: " + filePath + " -> " + value);
+        }
+    }
+
+    /**
+     * Reads a boolean property from a given file path.
+     */
+    public static boolean getBoolPropFromPath(String key, String filePath) {
+        String value = getStrPropFromPath(key, filePath);
         return Boolean.parseBoolean(value.trim());
     }
 }

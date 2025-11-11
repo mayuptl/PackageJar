@@ -51,8 +51,8 @@ public class ExtentReportListeners implements ITestListener {
 
     @Override
     public void onTestSuccess(ITestResult result) {
-        ExtentTest test = ExtentManager.getTest();
-        /* attachScreenshot(test,driver);*/
+        /*ExtentTest test = ExtentManager.getTest();
+         attachScreenshot(test,driver);*/
         ExtentManager.removeTest();
     }
 
