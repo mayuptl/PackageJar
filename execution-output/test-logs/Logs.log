@@ -1,0 +1,13 @@
+2025-11-13 04:31:57 [] [INFO] TC01 - End to end start
+
+2025-11-13 04:31:57 [] [INFO] Swara - INFO
+2025-11-13 04:31:57 [] [WARN] Swara - WARN
+2025-11-13 04:31:57 [] [ERROR] Swara - ERROR
+2025-11-13 04:31:57 [] [DEBUG] Swara - DEBUG
+2025-11-13 04:31:57 [] [TRACE] Swara - TRACE
+2025-11-13 04:31:57 [] [FATAL] Swara - FATAL
+2025-11-13 04:31:57 [] [INFO] LogOutCheck_ - Test case started
+2025-11-13 04:31:57 [] [INFO] LogOutCheck_ - Test case pass
+
+2025-11-13 04:31:57 [] [INFO] TC01 - End to end completed
+

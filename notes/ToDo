@@ -1,0 +1,22 @@
+
+1] Dynamic Log File Management
+Since you fixed the Log4j initialization, the next failure point can be when
+two consumers run simultaneously (e.g., on a shared Jenkins agent).
+They will both try to write to the exact same log file path, which causes concurrency errors.
+
+The Solution: Unique Log File Names
+Ensure your LOG_FILE_NAME property is dynamic by appending a unique identifier,
+like the current timestamp or a UUID, when the framework initializes.
+
+In your FrameworkInitializer.init():
+// Inside FrameworkInitializer.init()
+String originalFileName = ConfigReader.getStrProp("LOG_FILE_NAME");
+String uniqueFileName = originalFileName.replace(".log", "_" + System.currentTimeMillis() + ".log");
+
+// Now set the dynamic property
+System.setProperty("log4j2.fileName", uniqueFileName);
+
+This simple change ensures that every test execution, even if run in parallel,
+generates its own distinct log file, eliminating file access conflicts.
+
+2] Do not use System.err.println() in catch blocks / find out something better

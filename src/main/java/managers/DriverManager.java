@@ -52,9 +52,7 @@ public class DriverManager {
         WebDriver driver = threadLocalDriver.get();
         if (driver != null) {
             try {
-                // Quit the browser session
                 driver.quit();
-                //System.out.println("WebDriver quit successfully for thread: " + Thread.currentThread().getId());
             } catch (Exception e) {
                 System.err.println("Error while quitting WebDriver for thread " + Thread.currentThread().getId() + ": " + e.getMessage());
             } finally {

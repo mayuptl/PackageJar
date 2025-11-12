@@ -1,52 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    The shutdownHook="disable" is added to prevent Log4j from delaying the JVM shutdown
-    and to allow the WebDriver processes to terminate cleanly, which is common in test automation.
--->
 <Configuration status="WARN" debug="false" shutdownHook="disable">
-    <!-- Changing status to WARN to suppress unnecessary Log4j internal output -->
     <Properties>
+       <!--
         <Property name="CONSOLE_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%X{driverId}] %highlight{[%p]}{ERROR=red, WARN=yellow bold, INFO=green, DEBUG=blue, TRACE=blue} %c{1} - %msg%n</Property>
         <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%X{driverId}] [%p] %c{1} - %msg%n</Property>
-
-        <!-- Define the base logging directory -->
-        <!-- ${sys:user.dir} points to D:\Work\Automation\app-utils\app-utils\target\classes when running tests -->
+        -->
+        <Property name="ROOT_LEVEL">${sys:log4j2.rootLevel}</Property>
+        <Property name="CONSOLE_PATTERN">${sys:log4j2.consolePattern}</Property>
+        <Property name="FILE_PATTERN">${sys:log4j2.filePattern}</Property>
         <Property name="LOG_DIR">${sys:log4j2.logDir}</Property>
         <Property name="LOG_FILE_NAME">${sys:log4j2.logDir}/${sys:log4j2.fileName}</Property>
-        <!--<Property name="LOG_DIR">execution-output/test-logs</Property>
-        <Property name="LOG_FILE_NAME">${LOG_DIR}/Logs.log</Property>-->
     </Properties>
-
     <Appenders>
-        <!-- Console Appender (STDOUT) -->
         <Console name="STDOUT" target="SYSTEM_OUT">
-            <PatternLayout pattern="${CONSOLE_PATTERN}" />
+            <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY"/>
+           <!-- <MarkerFilter marker="CONFIG_TABLE_DUMP" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+            <PatternLayout pattern="${CONSOLE_PATTERN}" disableAnsi="false"/>
         </Console>
-
-        <!-- Rolling File Appender (Recommended for stability and automatic directory creation) -->
-        <!-- The RollingFile appender is generally more robust and flexible for logging to files. -->
-        <!-- Log4j 2 uses the `filePermissions` attribute to attempt to ensure file creation. -->
         <RollingFile name="FileAppender"
                      fileName="${sys:log4j2.logDir}/${sys:log4j2.fileName}"
                      filePattern="${sys:log4j2.logDir}/archive/Logs-%d{yyyy-MM-dd}-%i.log.gz"
                      createOnDemand="true">
-            <PatternLayout pattern="${FILE_PATTERN}" />
-
-            <!-- Standard Rolling Policy (This ensures the logs don't grow indefinitely) -->
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${FILE_PATTERN}"/>
             <Policies>
                 <OnStartupTriggeringPolicy />
                 <TimeBasedTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
-            <!-- Default Rollover Strategy -->
             <DefaultRolloverStrategy max="20" />
         </RollingFile>
     </Appenders>
-
-    <!-- Loggers Configuration -->
     <Loggers>
-        <!-- Suppress verbose Log4j 2 status messages below WARN -->
-        <Root level="info">
+        <!-- 1. HTTP Clients (used heavily by Selenium to talk to drivers) -->
+        <Logger name="org.apache.http" level="ERROR" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+        <Logger name="org.asynchttpclient" level="ERROR" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+        <!-- 2. Selenium/WebDriver Loggers -->
+        <Logger name="org.openqa.selenium" level="ERROR" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+        <!-- 3. TestNG Framework Loggers -->
+        <Logger name="org.testng" level="ERROR" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+        <!-- 4. Other Common Dependencies (Maven/Jetty/etc.) -->
+        <Logger name="io.netty" level="OFF" additivity="false"/>
+        <Logger name="org.eclipse.jetty" level="OFF" additivity="false"/>
+        <!--<Root level="info">-->
+        <Root level="${ROOT_LEVEL}">
             <AppenderRef ref="STDOUT" />
             <AppenderRef ref="FileAppender" />
         </Root>
