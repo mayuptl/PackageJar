@@ -23,6 +23,7 @@ public class ConfigReader {
     // Static block to initialize the properties when the class is loaded
     static {
         loadMergedProperties();
+      loadMergedCtrProperties();
     }
 
     /**
@@ -74,6 +75,14 @@ public class ConfigReader {
         injectSystemProperty("FILE_PATTERN", "log4j2.filePattern");
         injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
         injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
+        // Chain - Test - Report config //
+        injectSystemProperty("CHAIN_TEST_REPORT_NAME", "ctr.name");
+        injectSystemProperty("CHAIN_TEST_REPORT_DIR", "ctr.dir");
+        injectSystemProperty("CHAIN_TEST_REPORT_FILE_NAME", "ctr.filename");
+        injectSystemProperty("CHAIN_TEST_REPORT_THEME", "ctr.theme");
+        injectSystemProperty("CHAIN_TEST_REPORT_VERSION", "ctr.version");
+        injectSystemProperty("CHAIN_TEST_REPORT_ENV", "ctr.env");
+        injectSystemProperty("CHAIN_TEST_REPORT_LOGO_PATH", "ctr.logopath");
         //System.out.println("INFO: ConfigReader initialization complete. Log4j system properties set.");
         // 2. PRINT OVERRIDES (Outside the loop, using formatted table)
         if ("true".equalsIgnoreCase(getStrProp("SHOW_OVERRIDE"))) {
@@ -320,5 +329,34 @@ public class ConfigReader {
     public static boolean getBoolPropFromPath(String key, String filePath) {
         String value = getStrPropFromPath(key, filePath);
         return Boolean.parseBoolean(value.trim());
+    }
+
+    private static void loadMergedCtrProperties()
+    {
+        //Step 1 : Load jars default-ctr-config.properties
+        InputStream defaultsStream = null;
+        for (int i = 0; i < 2; i++) {
+            try {
+                defaultsStream = ConfigReader.class.getResourceAsStream("/default-ctr-config.properties");
+                if (defaultsStream != null) {
+                    CACHED_PROPS.load(defaultsStream);
+                    break;
+                } else {
+                    System.err.println("WARNING: default-ctr-config.properties not found inside JAR (attempt " + (i + 1) + ")");
+                }
+            } catch (IOException e) {
+                System.err.println("WARNING: Failed to load default-ctr-config.properties from inside JAR (attempt " + (i + 1) + ")");
+            }
+        }
+        //Step 2 : Load consumer properties
+        try (InputStream overrideStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chaintestreport.properties")) {
+            if (overrideStream != null) {
+                Properties overrideProps = new Properties();
+                overrideProps.load(overrideStream);
+                CACHED_PROPS.putAll(overrideProps);
+            }
+        } catch (IOException e) {
+            System.out.println("INFO: Using default values because no chaintestreport.properties file found or no keys match with JAR's .properties file keys");
+        }
     }
 }

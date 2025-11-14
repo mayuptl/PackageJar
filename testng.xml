@@ -3,7 +3,9 @@
 <suite name="Test demo" verbose="2" parallel="classes" thread-count="3">
     <listeners>
      <!--<listener class-name="listeners.ExtentVideoLogAttachListeners" />-->
-       <listener class-name="listeners.ExtentLogAttachListeners" />
+      <!-- <listener class-name="listeners.ExtentLogAttachListeners" />-->
+        <listener class-name="com.aventstack.chaintest.plugins.ChainTestListener" />
+
     </listeners>
     <test name="Test">
         <classes>

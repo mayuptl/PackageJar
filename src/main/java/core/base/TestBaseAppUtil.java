@@ -1,5 +1,6 @@
 package core.base;
 
+import com.aventstack.chaintest.plugins.ChainTestListener;
 import core.config.ConfigReader;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import managers.DriverManager;
@@ -15,6 +16,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariOptions;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Listeners;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -26,6 +28,7 @@ import static core.config.ConfigReader.getStrProp;
  * Base utility class for initializing, managing, and tearing down WebDriver instances.
  * This class provides methods to launch the application using different configurations.
  */
+//@Listeners(ChainTestListener.class)
 public class TestBaseAppUtil {
     /**
      * The WebDriver instance for the current test thread.
