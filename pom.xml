@@ -5,23 +5,17 @@
 
     <groupId>org.example</groupId>
     <artifactId>app-utils</artifactId>
-    <version>4.0.76-SNAPSHOT</version>
+    <version>4.0.87-SNAPSHOT</version>
 
     <name>app-utils</name>
     <url>http://www.example.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/com.aventstack/chaintest-testng -->
-        <dependency>
-            <groupId>com.aventstack</groupId>
-            <artifactId>chaintest-testng</artifactId>
-            <version>1.0.12</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
@@ -95,6 +89,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.aventstack/chaintest-testng -->
+        <dependency>
+            <groupId>com.aventstack</groupId>
+            <artifactId>chaintest-testng</artifactId>
+            <version>1.0.12</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.aventstack/extentreports -->
         <dependency>
             <groupId>com.aventstack</groupId>
@@ -157,7 +163,22 @@
                                         <!-- FIX: Overlapping metadata files -->
                                         <exclude>META-INF/MANIFEST.MF</exclude>
                                         <exclude>META-INF/DEPENDENCIES</exclude>
-                                        <!-- The other overlapping files (NOTICE/LICENSE) will be merged by transformers below -->
+                                        <!-- Existing suppressions for Netty/Gson/Nimbus -->
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/proguard/**</exclude>
+                                        <exclude>META-INF/io.netty.versions.properties</exclude>
+                                        <exclude>META-INF/AL2.0</exclude>
+                                        <exclude>META-INF/LGPL2.1</exclude>
+                                        <!-- NEW FIX: Exclude the overlapping FastDoubleParser license files -->
+                                        <exclude>META-INF/FastDoubleParser-LICENSE</exclude>
+                                        <exclude>META-INF/FastDoubleParser-NOTICE</exclude>
+                                        <!-- NEW FIX: Exclude the nested license files inside netty-tcnative packages -->
+                                        <exclude>META-INF/license/**</exclude>
+                                        <!-- Exclude all native OS resources except for the default JARs. This cleans up Netty tcnative warnings. -->
+                                        <exclude>io/netty/tcnative/**</exclude>
+                                        <exclude>io/netty/libtcnative.so</exclude>
+                                        <exclude>io/netty/libtcnative.dylib</exclude>
+                                        <exclude>io/netty/tcnative.dll</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -204,10 +225,10 @@
                                     <pattern>com.github.stephenc.monte</pattern>
                                     <shadedPattern>org.example.apputils.shaded.monte</shadedPattern>
                                 </relocation>
-                                <relocation>
+                                <!--<relocation>
                                     <pattern>com.aventstack</pattern>
                                     <shadedPattern>org.example.apputils.shaded.extentreports</shadedPattern>
-                                </relocation>
+                                </relocation>-->
                                 <!-- <relocation>
                                      <pattern>org.slf4j</pattern>
                                      <shadedPattern>org.example.apputils.shaded.slf4j-nop</shadedPattern>
@@ -266,7 +287,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>16</release>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>

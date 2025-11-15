@@ -1,11 +1,10 @@
 package core.config;
 
-
-import java.util.concurrent.TimeUnit; // New import for the fix
-import org.apache.logging.log4j.Marker; // New import for the fix
+import java.util.Map.Entry;
 //import org.apache.logging.log4j.MarkerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,19 +12,29 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class ConfigReader {
     // Static instance to hold the merged properties, loaded only once
     private static final Properties CACHED_PROPS = new Properties();
     private static final List<String[]> OVERRIDDEN_DETAILS = new ArrayList<>();
     private static Logger LOGGER = null;
-  //  private static final Marker CONFIG_TABLE_DUMP_MARKER = MarkerFactory.getMarker("CONFIG_TABLE_DUMP");
-    // Static block to initialize the properties when the class is loaded
-    static {
-        loadMergedProperties();
-      loadMergedCtrProperties();
-    }
+    private static final Properties CACHED_PROPS_CTR = new Properties();
+    //  private static final Marker CONFIG_TABLE_DUMP_MARKER = MarkerFactory.getMarker("CONFIG_TABLE_DUMP");
 
+    static {
+        try {
+            // These methods contain the critical logic that's currently failing.
+            loadMergedProperties();
+            loadMergedCtrProperties();
+        } catch (Exception e) {
+            System.err.println("FATAL ERROR: ConfigReader failed to initialize JAR's config.properties in static block!");
+            System.err.println("This is likely due to a NullPointerException while reading a system property or an IOException while accessing a file.");
+            e.printStackTrace();
+            // Note: If you want the program to halt entirely upon a config load failure,
+            // throw new RuntimeException("Failed to initialize core configuration.", e);
+        }
+    }
     /**
      * Loads the properties with the correct merging priority:
      * 1. Load the default properties from INSIDE the current JAR (lower priority).
@@ -68,22 +77,13 @@ public class ConfigReader {
                 CACHED_PROPS.putAll(overrideProps);
             }
         } catch (IOException e) {
-            System.out.println("INFO: Using default values because no config.properties file found or no keys match with JAR's default-config.properties file keys");
+            System.out.println("INFO: Using default values because no config.properties file not found or no keys match with JAR's default-config.properties file keys");
         }
         injectSystemProperty("ROOT_LEVEL", "log4j2.rootLevel");
         injectSystemProperty("CONSOLE_PATTERN", "log4j2.consolePattern");
         injectSystemProperty("FILE_PATTERN", "log4j2.filePattern");
         injectSystemProperty("LOG_FILE_DIR", "log4j2.logDir");
         injectSystemProperty("LOG_FILE_NAME", "log4j2.fileName");
-        // Chain - Test - Report config //
-        injectSystemProperty("CHAIN_TEST_REPORT_NAME", "ctr.name");
-        injectSystemProperty("CHAIN_TEST_REPORT_DIR", "ctr.dir");
-        injectSystemProperty("CHAIN_TEST_REPORT_FILE_NAME", "ctr.filename");
-        injectSystemProperty("CHAIN_TEST_REPORT_THEME", "ctr.theme");
-        injectSystemProperty("CHAIN_TEST_REPORT_VERSION", "ctr.version");
-        injectSystemProperty("CHAIN_TEST_REPORT_ENV", "ctr.env");
-        injectSystemProperty("CHAIN_TEST_REPORT_LOGO_PATH", "ctr.logopath");
-        //System.out.println("INFO: ConfigReader initialization complete. Log4j system properties set.");
         // 2. PRINT OVERRIDES (Outside the loop, using formatted table)
         if ("true".equalsIgnoreCase(getStrProp("SHOW_OVERRIDE"))) {
             printOverrideValue(OVERRIDDEN_DETAILS);
@@ -100,7 +100,7 @@ public class ConfigReader {
             LOGGER = LogManager.getLogger(ConfigReader.class);
         }
         if (overriddenDetails.isEmpty()) {
-            System.out.println("INFO: Override display is ENABLED, but no properties differed from JAR defaults.");
+            //System.out.println("INFO: Override display is ENABLED, but no properties differed from JAR defaults.");
             // We stop here if the list is empty, having printed a useful message.
             return;
         }
@@ -155,7 +155,6 @@ public class ConfigReader {
             // Log the synchronization failure.
             System.err.println("WARNING: Failed to synchronize Log4j2 during startup log flush: " + e.getMessage());
         }*/
-
     }
 
     /**
@@ -331,32 +330,58 @@ public class ConfigReader {
         return Boolean.parseBoolean(value.trim());
     }
 
-    private static void loadMergedCtrProperties()
-    {
-        //Step 1 : Load jars default-ctr-config.properties
-        InputStream defaultsStream = null;
-        for (int i = 0; i < 2; i++) {
-            try {
-                defaultsStream = ConfigReader.class.getResourceAsStream("/default-ctr-config.properties");
-                if (defaultsStream != null) {
-                    CACHED_PROPS.load(defaultsStream);
-                    break;
-                } else {
-                    System.err.println("WARNING: default-ctr-config.properties not found inside JAR (attempt " + (i + 1) + ")");
-                }
-            } catch (IOException e) {
-                System.err.println("WARNING: Failed to load default-ctr-config.properties from inside JAR (attempt " + (i + 1) + ")");
+    /**
+     * Helper method to inject all properties from the final merged ChainTest config
+     * into the Java System Properties. This guarantees the external library can read them.
+     */
+    private static void injectFinalPropertiesAsSystemProps() {
+        if (CACHED_PROPS_CTR == null || CACHED_PROPS_CTR.isEmpty()) {
+            return;
+        }
+        // Iterate over the final merged properties and set them as System Properties.
+        for (Entry<Object, Object> entry : CACHED_PROPS_CTR.entrySet()) {
+            String key = (String) entry.getKey();
+            String value = (String) entry.getValue();
+            // Only set if the System Property hasn't been set externally (highest priority)
+            if (System.getProperty(key) == null) {
+                System.setProperty(key, value);
             }
         }
-        //Step 2 : Load consumer properties
-        try (InputStream overrideStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("chaintestreport.properties")) {
-            if (overrideStream != null) {
-                Properties overrideProps = new Properties();
-                overrideProps.load(overrideStream);
-                CACHED_PROPS.putAll(overrideProps);
+       // System.out.println("INFO: Injected final ChainTest properties into Java System Properties.");
+    }
+
+    public static void loadMergedCtrProperties() {
+        // --- Step 1: Load JAR Defaults (Lowest Precedence) ---
+        try (InputStream defaultsStreamCtr = ConfigReader.class.getResourceAsStream("/chaintest.properties")) {
+            if (defaultsStreamCtr != null) {
+                CACHED_PROPS_CTR.load(defaultsStreamCtr);
+            } else {
+                System.err.println("WARNING: chaintest.properties not found inside JAR. Using empty defaults.");
             }
         } catch (IOException e) {
-            System.out.println("INFO: Using default values because no chaintestreport.properties file found or no keys match with JAR's .properties file keys");
+            System.err.println("ERROR: Failed to load dchaintest.properties from JAR: " + e.getMessage());
         }
+        // --- Step 2: Load Consumer Overrides (Highest Precedence) ---
+        try (InputStream overrideStreamCtr = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties")) {
+            if (overrideStreamCtr != null) {
+                Properties overridePropsCtr = new Properties();
+                overridePropsCtr.load(overrideStreamCtr);
+                int overrideCount = 0;
+                // CRITICAL LOGIC: Iterate and only override keys that exist in JAR defaults.
+                Set<String> consumerKeys = overridePropsCtr.stringPropertyNames();
+                for (String key : consumerKeys) {
+                    if (CACHED_PROPS_CTR.containsKey(key)) {
+                        CACHED_PROPS_CTR.setProperty(key, overridePropsCtr.getProperty(key));
+                        overrideCount++;
+                    }
+                }
+                // System.out.println("INFO: Override properties count : "overrideCount);
+            }
+        } catch (IOException e) {
+            System.err.println("ERROR: Failed to load consumer properties: " + e.getMessage());
+        }
+        // --- STEP 3: INJECT INTO SYSTEM PROPERTIES ---
+        // This is the fix. It ensures the configuration is available immediately.
+        injectFinalPropertiesAsSystemProps();
     }
 }
