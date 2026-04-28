@@ -1,5 +1,6 @@
 package listeners;
 
+import com.aventstack.chaintest.plugins.ChainTestListener;
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
@@ -22,6 +23,7 @@ import java.util.Arrays;
 
 import static core.config.CoreConfigReader.getStrProp;
 import static core.screenshot.CoreScreenshotUtil.getBase64Screenshot;
+//import static core.screenshot.CoreScreenshotUtil.getBase64Screenshot1;
 import static core.video.CoreVideoPathUtil.toGetVideoFilePath;
 /**
  * ExtentVideoLogAttachListeners is the comprehensive listener responsible for:
@@ -157,6 +159,7 @@ public class CoreExtentVideoLogAttachListener implements ITestListener {
                         + testLogs + "</pre></div>";
         test.info(styledLogs);
         createClassLevelLogsFolder(testLogs,result);
+        ChainTestListener.log(styledLogs);
     }
     /**
      * Creates a dedicated folder structure based on the class name and writes the raw test logs
@@ -200,6 +203,7 @@ public class CoreExtentVideoLogAttachListener implements ITestListener {
             if (videoLinkHtml != null) {
                 //  test.info(videoLinkHtml +" : " +methodName);
                 test.info("Execution video link :<br>"+videoLinkHtml);
+                ChainTestListener.log("Execution video link :<br>"+videoLinkHtml);
             } else {
                 test.log(Status.INFO, "Video recording file was not found after test completion.");
             }
@@ -224,6 +228,8 @@ public class CoreExtentVideoLogAttachListener implements ITestListener {
             String base64Screenshot = getBase64Screenshot(driver);
             //test.log(Status.INFO,stepName, MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot).build());
             test.addScreenCaptureFromBase64String(base64Screenshot);
+           //ChainTestListener.embed(base64Screenshot1,"image/png");
+            ChainTestListener.embed(base64Screenshot,"image/png");
         }else {
             System.err.println("Driver is null. failed to attached screenshot");
         }

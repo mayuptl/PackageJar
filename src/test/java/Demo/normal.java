@@ -1,19 +1,17 @@
 package Demo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class normal{
-
+public class normal  {//extends CoreBaseTest
     @Test
-    public void swara()
+    public void jar()
     {
-        Logger log = LogManager.getLogger("Swara");
+        Logger log = LogManager.getLogger("swara");
+        log.info("Test case started");
         log.info("INFO");
-        log.warn("WARN");
-        log.error("ERROR");
-        log.debug("DEBUG");
-        log.trace("TRACE");
-        log.fatal("FATAL");
+        Assert.assertTrue(true);
+        log.info("Test case passed");
     }
 }

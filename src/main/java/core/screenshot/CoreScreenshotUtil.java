@@ -1,5 +1,6 @@
 package core.screenshot;
 
+import com.aventstack.chaintest.plugins.ChainTestListener;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
@@ -31,6 +32,9 @@ public class CoreScreenshotUtil
     public static String getBase64Screenshot(WebDriver driver) {
         return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
     }
+//    public static byte[] getBase64Screenshot1(WebDriver driver) {
+//        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+//    }
     /**
      * Takes a step screenshot using the current thread-local driver, logs a step
      * and attaches the image to the Extent Report.
@@ -56,6 +60,8 @@ public class CoreScreenshotUtil
                 int imageLength = base64Image.length();
                 System.out.println("DEBUG: Base64 String Character Length for Step '" + stepName + "': " + imageLength);*/
                 test.log(Status.INFO, stepName, MediaEntityBuilder.createScreenCaptureFromBase64String(base64Image).build());
+               // ChainTestListener.log(stepName,MediaEntityBuilder.createScreenCaptureFromBase64String(base64Image).build());
+                ChainTestListener.embed(base64Image,"image/png");
             } catch (Exception e) {
                 test.log(Status.INFO, stepName + " (Screenshot failed: " + e.getMessage() + ")");
                 System.err.println("Failed to take step screenshot for: " + stepName + ". Error: " + e.getMessage());

@@ -63,8 +63,8 @@ public class CoreBaseTest {
         String driverPath= "D:\\Work\\Automation\\app-utils\\app-utils\\notes\\msedgedriver.exe";
         //driver = initDriver("edge");
         //driver = initDriver("edge",driverPath);
-        //driver = initDriverOptions("firefox",CUSTOM_OPTIONS);
-        driver =  initDriver("edge",driverPath,CUSTOM_OPTIONS);
+        driver = initDriverOptions("edge",CUSTOM_OPTIONS);
+       // driver =  initDriver("edge",driverPath,CUSTOM_OPTIONS);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.get("https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager/6.3.2");
     }
